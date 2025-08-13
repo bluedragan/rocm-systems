@@ -84,6 +84,7 @@ class Roofline:
                 "include_kernel_names": False,
                 "is_standalone": False,
                 "roofline_data_type": ["FP32"],  # default to FP32
+                "kernel_filter": False,
             }
         )
         self.__ai_data = None
@@ -101,13 +102,42 @@ class Roofline:
         if hasattr(self.__args, "sort") and self.__args.sort != "ALL":
             self.__run_parameters["sort_type"] = self.__args.sort
         self.__run_parameters["roofline_data_type"] = self.__args.roofline_data_type
+        if hasattr(self.__args, "kernel") and self.__args.kernel:
+            self.__run_parameters["kernel_filter"] = True
         self.validate_parameters()
 
     def validate_parameters(self):
         if self.__run_parameters["include_kernel_names"] and (
             not self.__run_parameters["is_standalone"]
         ):
-            console_error("--kernel-names cannot be used with --no-roof option")
+            console_warning(
+                "--kernel-names is nonactionable when used with --no-roof option"
+            )
+
+    def validate_apply_kernel_filter(self, df):
+        if self.__run_parameters["kernel_filter"] is True:
+            df_pmc = df["pmc_perf"]
+            df_filtered = df_pmc.copy()
+            df_list = (df_pmc.loc[:, "Kernel_Name"]).to_list()
+            for idx in range(0, len(df_list)):
+                if df_list[idx].split("(")[0] not in self.__args.kernel:
+                    # Drop row from the dataframe if the kernel has not been requested
+                    df_filtered.drop(index=idx, inplace=True)
+            # Verify that the final filtered kernel df matches the kernel list requested
+            if len(df_filtered.drop_duplicates(subset=["Kernel_Name"])) != len(
+                self.__args.kernel
+            ):
+                console_debug("Profiled kernels: {}".format(df_list))
+                console_error(
+                    "Roofline cannot profile - kernels requested with `--kernel` missing from profiling data!"  # noqa: E501
+                    "\n\tRe-profile workload in full or specify subset of available kernels using `--kernel` option."  # noqa: E501
+                    "\n\tComplete profiled kernels list can be found in pmc_perf file.",
+                    exit=True,
+                )
+            # Fix df structure to resemble same df arg passed in
+            df["pmc_perf"] = df_filtered
+
+        return df
 
     def roof_setup(self):
         # Setup the workload directory for roofline profiling.
@@ -162,7 +192,20 @@ class Roofline:
             final_dir = base_dir
 
         # Create the directory
-        Path(final_dir).mkdir(parents=True, exist_ok=True)
+        try:
+            Path(final_dir).mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            console_warning(
+                "Workload directory already exists- re-profiling into same directory could result in unexpected behaviour!"  # noqa: E501
+                "\n\tIf you are not purposely re-using existing profiling data, either:"
+                "\n\t- use `--name` option to assign different name to the workload, or"
+                "\n\t- clear the workload directory to ensure a clean profiling run"
+            )
+        else:
+            console_error(
+                "There was an error creating the path for the workload directory",
+                exit=True,
+            )
 
     @demarcate
     def empirical_roofline(
@@ -173,17 +216,13 @@ class Roofline:
         Generate a set of empirical roofline plots given a directory containing
         required profiling and benchmarking data.
         """
-        if (
-            not isinstance(self.__run_parameters["workload_dir"], list)
-            and self.__run_parameters["workload_dir"] != None
-        ):
-            self.roof_setup()
-
         console_debug(
             "roofline", "Path: %s" % self.__run_parameters.get("workload_dir")
         )
+        # Verify kernels have been profiled and create a filtered dataframe
+        checked_df = self.validate_apply_kernel_filter(ret_df)
         self.__ai_data = calc_ai(
-            self.__mspec, self.__run_parameters.get("sort_type"), ret_df
+            self.__mspec, self.__run_parameters.get("sort_type"), checked_df
         )
 
         msg = "AI at each mem level:"
@@ -192,7 +231,7 @@ class Roofline:
         console_debug(msg)
 
         ops_figure = flops_figure = None
-        ops_dt_list = flops_dt_list = ""
+        ops_dt_list = flops_dt_list = kernel_list = ""
 
         for dt in self.__run_parameters.get("roofline_data_type", []):
             gpu_arch = getattr(self.__mspec, "gpu_arch", "unknown_arch")
@@ -245,6 +284,8 @@ class Roofline:
                 original_kernel_names = []
             else:
                 original_kernel_names = self.__ai_data.get("kernelNames", [])
+                for name in sorted(self.__args.kernel):
+                    kernel_list += "_" + name
 
             num_kernels = len(original_kernel_names)
 
@@ -376,18 +417,23 @@ class Roofline:
                 if ops_figure:
                     ops_figure.write_image(
                         self.__run_parameters["workload_dir"]
-                        + "/empirRoof_gpu-{}{}.pdf".format(dev_id, ops_dt_list)
+                        + "/empirRoof_gpu-{}{}{}.pdf".format(
+                            dev_id, ops_dt_list, kernel_list
+                        )
                     )
                 if flops_figure:
                     flops_figure.write_image(
                         self.__run_parameters["workload_dir"]
-                        + "/empirRoof_gpu-{}{}.pdf".format(dev_id, flops_dt_list)
+                        + "/empirRoof_gpu-{}{}{}.pdf".format(
+                            dev_id, flops_dt_list, kernel_list
+                        )
                     )
 
                 # only save a legend if kernel_names option is toggled
                 if self.__run_parameters["include_kernel_names"]:
                     self.__figure.write_image(
-                        self.__run_parameters["workload_dir"] + "/kernelName_legend.pdf"
+                        self.__run_parameters["workload_dir"]
+                        + "/kernelName_legend-{}{}.pdf".format(dev_id, kernel_list)
                     )
                 time.sleep(1)
             console_log("roofline", "Empirical Roofline PDFs saved!")
@@ -890,7 +936,9 @@ class Roofline:
 
     @abstractmethod
     def profile(self):
-        if self.__args.roof_only:
+        if self.__args.no_roof:
+            console_log("roofline", "Skipping roofline.")
+        else:
             # check for roofline benchmark
             console_log(
                 "roofline", "Checking for roofline.csv in " + str(self.__args.path)
@@ -914,11 +962,6 @@ class Roofline:
                     )
                 # TODO: Add an equivelent of characterize_app() to run profiling
                 # directly out of this module
-
-        elif self.__args.no_roof:
-            console_log("roofline", "Skipping roofline.")
-        else:
-            mibench(self.__args, self.__mspec)
 
     # NB: Currently the post_prossesing() method is the only one being used by
     # rocprofiler-compute, we include pre_processing() and profile() methods for
