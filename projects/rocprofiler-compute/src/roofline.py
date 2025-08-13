@@ -201,7 +201,7 @@ class Roofline:
                 "\n\t- use `--name` option to assign different name to the workload, or"
                 "\n\t- clear the workload directory to ensure a clean profiling run"
             )
-        else:
+        except Exception:
             console_error(
                 "There was an error creating the path for the workload directory",
                 exit=True,
@@ -284,8 +284,9 @@ class Roofline:
                 original_kernel_names = []
             else:
                 original_kernel_names = self.__ai_data.get("kernelNames", [])
-                for name in sorted(self.__args.kernel):
-                    kernel_list += "_" + name
+                if self.__run_parameters.get("kernel_filter", True):
+                    for name in sorted(self.__args.kernel):
+                        kernel_list += "_" + name
 
             num_kernels = len(original_kernel_names)
 
@@ -433,7 +434,7 @@ class Roofline:
                 if self.__run_parameters["include_kernel_names"]:
                     self.__figure.write_image(
                         self.__run_parameters["workload_dir"]
-                        + "/kernelName_legend-{}{}.pdf".format(dev_id, kernel_list)
+                        + "/kernelName_legend-{}.pdf".format(kernel_list)
                     )
                 time.sleep(1)
             console_log("roofline", "Empirical Roofline PDFs saved!")
