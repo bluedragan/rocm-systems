@@ -823,13 +823,10 @@ def test_roof_workload_dir_validation(binary_handler_profile_rocprof_compute):
 
 
 @pytest.mark.misc
-def test_roofline_kernel_filter_error_handling(binary_handler_profile_rocprof_compute):
+def test_roofline_empty_kernel_names_handling(binary_handler_profile_rocprof_compute):
     """
-    Test validate_apply_kernel_filter()
-    Roofline checks `--kernel` args provided are present in data
-
-    Expect console_error return code 1 for each case when providing
-    kernel that is not present in profiled data.
+    Test empirical_roofline() when num_kernels == 0
+    This should trigger the "No kernel names found" log message
     """
     if soc in ("MI100"):
         pytest.skip("Skipping roofline test for MI100")
@@ -846,17 +843,8 @@ def test_roofline_kernel_filter_error_handling(binary_handler_profile_rocprof_co
     workload_dir = test_utils.get_output_dir()
 
     returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
-        config, workload_dir, options, check_success=False, roof=True
+        config, workload_dir, options, check_success=True, roof=True
     )
-    assert returncode == 1
-
-    options.append(config["kernel_name_1"])
-
-    returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
-        config, workload_dir, options, check_success=False, roof=True
-    )
-    assert returncode == 1
-
     test_utils.clean_output_dir(config["cleanup"], workload_dir)
 
 
@@ -884,11 +872,18 @@ def test_roofline_kernel_filter(binary_handler_profile_rocprof_compute):
         config, workload_dir, options, check_success=True, roof=True
     )
     # Don't clean output dir, use same workload
-    options.append(config["kernel_name_1"])
-
+    options.extend(["--kernel", config["kernel_name_1"]])
     returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
         config, workload_dir, options, check_success=True, roof=True
     )
+
+    # Test nonexistent kernel on roof profile using existing profiling data
+    # Since already profiled, throw error if non-existent kernel requested for roofline
+    options.append("nonexistent_kernel_name_that_should_not_match_anything")
+    returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
+        config, workload_dir, options, check_success=False, roof=True
+    )
+    assert returncode == 1
 
     test_utils.clean_output_dir(config["cleanup"], workload_dir)
 
