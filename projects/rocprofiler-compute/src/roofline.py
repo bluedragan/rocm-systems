@@ -127,7 +127,11 @@ class Roofline:
             if len(df_filtered.drop_duplicates(subset=["Kernel_Name"])) != len(
                 self.__args.kernel
             ):
-                console_debug("Profiled kernels: {}".format(df_list))
+                console_debug(
+                    "Profiled kernels: {}\n`--kernel`: {}".format(
+                        df_list, self.__args.kernel
+                    )
+                )
                 console_error(
                     "Roofline cannot profile - kernels requested with `--kernel` missing from profiling data!"  # noqa: E501
                     "\n\tRe-profile workload in full or specify subset of available kernels using `--kernel` option."  # noqa: E501
@@ -434,7 +438,7 @@ class Roofline:
                 if self.__run_parameters["include_kernel_names"]:
                     self.__figure.write_image(
                         self.__run_parameters["workload_dir"]
-                        + "/kernelName_legend-{}.pdf".format(kernel_list)
+                        + "/kernelName_legend{}.pdf".format(kernel_list)
                     )
                 time.sleep(1)
             console_log("roofline", "Empirical Roofline PDFs saved!")

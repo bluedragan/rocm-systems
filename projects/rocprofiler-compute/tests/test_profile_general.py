@@ -823,10 +823,13 @@ def test_roof_workload_dir_validation(binary_handler_profile_rocprof_compute):
 
 
 @pytest.mark.misc
-def test_roofline_empty_kernel_names_handling(binary_handler_profile_rocprof_compute):
+def test_roofline_kernel_filter_error_handling(binary_handler_profile_rocprof_compute):
     """
-    Test empirical_roofline() when num_kernels == 0
-    This should trigger the "No kernel names found" log message
+    Test validate_apply_kernel_filter()
+    Roofline checks `--kernel` args provided are present in data
+
+    Expect console_error return code 1 for each case when providing
+    kernel that is not present in profiled data.
     """
     if soc in ("MI100"):
         pytest.skip("Skipping roofline test for MI100")
@@ -844,6 +847,47 @@ def test_roofline_empty_kernel_names_handling(binary_handler_profile_rocprof_com
 
     returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
         config, workload_dir, options, check_success=False, roof=True
+    )
+    assert returncode == 1
+
+    options.append(config["kernel_name_1"])
+
+    returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
+        config, workload_dir, options, check_success=False, roof=True
+    )
+    assert returncode == 1
+
+    test_utils.clean_output_dir(config["cleanup"], workload_dir)
+
+
+@pytest.mark.misc
+def test_roofline_kernel_filter(binary_handler_profile_rocprof_compute):
+    """
+    Test roofline multi-attempt profiling with `--kernel`
+
+    Expect to be able to re-profile from same workload if kernels are valid.
+    (Validity of --kernels tested in test_roofline_kernel_filter_error_handling already)
+    """
+    if soc in ("MI100"):
+        pytest.skip("Skipping roofline test for MI100")
+        return
+
+    options = [
+        "--device",
+        "0",
+        "--roof-only",
+        "--kernel-names",
+    ]
+    workload_dir = test_utils.get_output_dir()
+
+    returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
+        config, workload_dir, options, check_success=True, roof=True
+    )
+    # Don't clean output dir, use same workload
+    options.append(config["kernel_name_1"])
+
+    returncode = binary_handler_profile_rocprof_compute(  # noqa: F841
+        config, workload_dir, options, check_success=True, roof=True
     )
 
     test_utils.clean_output_dir(config["cleanup"], workload_dir)
@@ -881,6 +925,10 @@ def test_roof_plot_modes(binary_handler_profile_rocprof_compute):
         assert True
         return
 
+    # Test `--kernel` filtering outputs are present and labelled correctly
+    filter_kernelName = "kernelName_legend_" + config["kernel_name_1"]
+    filter_empirRoof = "empirRoof_gpu-0_" + config["kernel_name_1"]
+
     plot_configurations = [
         {
             "options": ["--device", "0", "--roof-only", "--roofline-data-type", "FP32"],
@@ -893,6 +941,17 @@ def test_roof_plot_modes(binary_handler_profile_rocprof_compute):
         {
             "options": ["--device", "0", "--roof-only", "--kernel-names"],
             "expected_files": ["kernelName_legend.pdf"],
+        },
+        {
+            "options": [
+                "--device",
+                "0",
+                "--roof-only",
+                "--kernel-names",
+                "--kernel",
+                config["kernel_name_1"],
+            ],
+            "expected_files": [filter_kernelName, filter_empirRoof],
         },
     ]
 
@@ -1672,9 +1731,9 @@ class TestSetsIntegration:
 
         memory_metrics = ["16.1.2", "17.1.0"]
         for metric_id in memory_metrics:
-            assert (
-                metric_id in open(Path(workload_dir) / "log.txt", "r").read()
-            ), f"Expected memory metric {metric_id} not found"
+            assert metric_id in open(Path(workload_dir) / "log.txt", "r").read(), (
+                f"Expected memory metric {metric_id} not found"
+            )
 
         test_utils.clean_output_dir(config["cleanup"], workload_dir)
 
@@ -1741,7 +1800,9 @@ class TestSetsIntegration:
         assert returncode == 1
         test_utils.clean_output_dir(config["cleanup"], workload_dir)
 
-    def test_set_and_block_mutual_exclusion(self, binary_handler_profile_rocprof_compute):
+    def test_set_and_block_mutual_exclusion(
+        self, binary_handler_profile_rocprof_compute
+    ):
         options = ["--set", "compute_thruput_util", "--block", "12"]
         workload_dir = test_utils.get_output_dir()
 
