@@ -199,12 +199,13 @@ class Roofline:
         try:
             Path(final_dir).mkdir(parents=True, exist_ok=False)
         except FileExistsError:
-            console_warning(
-                "Workload directory already exists- re-profiling into same directory could result in unexpected behaviour!"  # noqa: E501
-                "\n\tIf you are not purposely re-using existing profiling data, either:"
-                "\n\t- use `--name` option to assign different name to the workload, or"
-                "\n\t- clear the workload directory to ensure a clean profiling run"
-            )
+            if self.__args.mode == "profile":
+                console_warning(
+                    "Workload directory already exists- re-profiling into same directory could result in unexpected behaviour!"  # noqa: E501
+                    "\n\tIf you do not want to reuse existing profiling data, try:"
+                    "\n\t- `--name` option to assign different name to the workload, or"
+                    "\n\t- clearing workload directory to ensure a clean profiling run"
+                )
         except Exception:
             console_error(
                 "There was an error creating the path for the workload directory",
@@ -288,7 +289,7 @@ class Roofline:
                 original_kernel_names = []
             else:
                 original_kernel_names = self.__ai_data.get("kernelNames", [])
-                if self.__run_parameters.get("kernel_filter", True):
+                if self.__run_parameters.get("kernel_filter", False):
                     for name in sorted(self.__args.kernel):
                         kernel_list += "_" + name
 
