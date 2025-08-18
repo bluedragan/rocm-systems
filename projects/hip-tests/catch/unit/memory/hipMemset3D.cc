@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021-25 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -41,23 +41,23 @@ TEST_CASE("Unit_hipMemset3D_BasicFunctional") {
   size_t width = numW * sizeof(char);
   size_t sizeElements = width * numH * depth;
   size_t elements = numW * numH * depth;
-  char *A_h;
+  char* A_h;
 
   hipExtent extent = make_hipExtent(width, numH, depth);
   hipPitchedPtr devPitchedPtr;
 
   HIP_CHECK(hipMalloc3D(&devPitchedPtr, extent));
-  A_h = reinterpret_cast<char *>(malloc(sizeElements));
+  A_h = reinterpret_cast<char*>(malloc(sizeElements));
   REQUIRE(A_h != nullptr);
 
   for (size_t i = 0; i < elements; i++) {
-      A_h[i] = 1;
+    A_h[i] = 1;
   }
   HIP_CHECK(hipMemset3D(devPitchedPtr, memsetval, extent));
   hipMemcpy3DParms myparms{};
   myparms.srcPos = make_hipPos(0, 0, 0);
   myparms.dstPos = make_hipPos(0, 0, 0);
-  myparms.dstPtr = make_hipPitchedPtr(A_h, width , numW, numH);
+  myparms.dstPtr = make_hipPitchedPtr(A_h, width, numW, numH);
   myparms.srcPtr = devPitchedPtr;
   myparms.extent = extent;
 #if HT_NVIDIA
@@ -68,11 +68,11 @@ TEST_CASE("Unit_hipMemset3D_BasicFunctional") {
   HIP_CHECK(hipMemcpy3D(&myparms));
 
   for (size_t i = 0; i < elements; i++) {
-      if (A_h[i] != memsetval) {
-        INFO("Memset3D mismatch at index:" << i << " computed:"
-                                      << A_h[i] << " memsetval:" << memsetval);
-        REQUIRE(false);
-      }
+    if (A_h[i] != memsetval) {
+      INFO("Memset3D mismatch at index:" << i << " computed:" << A_h[i]
+                                         << " memsetval:" << memsetval);
+      REQUIRE(false);
+    }
   }
   HIP_CHECK(hipFree(devPitchedPtr.ptr));
   free(A_h);
@@ -93,24 +93,26 @@ TEST_CASE("Unit_hipMemset3DAsync_BasicFunctional") {
   size_t elements = numW * numH * depth;
   hipExtent extent = make_hipExtent(width, numH, depth);
   hipPitchedPtr devPitchedPtr;
-  char *A_h;
+  char* A_h;
 
   HIP_CHECK(hipMalloc3D(&devPitchedPtr, extent));
-  A_h = reinterpret_cast<char *>(malloc(sizeElements));
+  A_h = reinterpret_cast<char*>(malloc(sizeElements));
   REQUIRE(A_h != nullptr);
 
   for (size_t i = 0; i < elements; i++) {
-      A_h[i] = 1;
+    A_h[i] = 1;
   }
-
+  GENERATE_CAPTURE();
   hipStream_t stream;
   HIP_CHECK(hipStreamCreate(&stream));
+  BEGIN_CAPTURE(stream);
   HIP_CHECK(hipMemset3DAsync(devPitchedPtr, memsetval, extent, stream));
+  END_CAPTURE(stream);
   HIP_CHECK(hipStreamSynchronize(stream));
   hipMemcpy3DParms myparms{};
   myparms.srcPos = make_hipPos(0, 0, 0);
   myparms.dstPos = make_hipPos(0, 0, 0);
-  myparms.dstPtr = make_hipPitchedPtr(A_h, width , numW, numH);
+  myparms.dstPtr = make_hipPitchedPtr(A_h, width, numW, numH);
   myparms.srcPtr = devPitchedPtr;
   myparms.extent = extent;
 #if HT_NVIDIA
@@ -121,30 +123,30 @@ TEST_CASE("Unit_hipMemset3DAsync_BasicFunctional") {
   HIP_CHECK(hipMemcpy3D(&myparms));
 
   for (size_t i = 0; i < elements; i++) {
-      if (A_h[i] != memsetval) {
-        INFO("Memset3DAsync mismatch at index:" << i << " computed:"
-                                      << A_h[i] << " memsetval:" << memsetval);
-        REQUIRE(false);
-      }
+    if (A_h[i] != memsetval) {
+      INFO("Memset3DAsync mismatch at index:" << i << " computed:" << A_h[i]
+                                              << " memsetval:" << memsetval);
+      REQUIRE(false);
+    }
   }
   HIP_CHECK(hipFree(devPitchedPtr.ptr));
   free(A_h);
 }
 
 /**
-* Test Description
-* ------------------------
-*  - Basic scenario to trigger capturehipMemset3DAsync internal
-*  api for improved code coverage
-* Test source
-* ------------------------
-*  - unit/memory/hipMemset3D.cc
-* Test requirements
-* ------------------------
-*  - HIP_VERSION >= 6.0
-*/
+ * Test Description
+ * ------------------------
+ *  - Basic scenario to trigger capturehipMemset3DAsync internal
+ *  api for improved code coverage
+ * Test source
+ * ------------------------
+ *  - unit/memory/hipMemset3D.cc
+ * Test requirements
+ * ------------------------
+ *  - HIP_VERSION >= 6.0
+ */
 TEST_CASE("Unit_hipMemset3DAsync_capturehipMemset3DAsync") {
-  char *A_h;
+  char* A_h;
   hipPitchedPtr A_d;
   hipGraph_t graph{nullptr};
   hipGraphExec_t graphExec{nullptr};
@@ -176,7 +178,7 @@ TEST_CASE("Unit_hipMemset3DAsync_capturehipMemset3DAsync") {
   params.kind = hipMemcpyDeviceToHost;
   HIP_CHECK(hipMemcpy3D(&params));
   for (int i = 0; i < (row * col * dep); i++) {
-    REQUIRE(A_h[i]=='a');
+    REQUIRE(A_h[i] == 'a');
   }
   HIP_CHECK(hipGraphExecDestroy(graphExec));
   HIP_CHECK(hipGraphDestroy(graph));
