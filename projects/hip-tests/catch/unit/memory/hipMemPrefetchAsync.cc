@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022-25 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -19,12 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <vector>
-
-#include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
-#include <utils.hh>
+#include <hip_test_common.hh>
 #include <resource_guards.hh>
+#include <utils.hh>
+#include <vector>
 
 std::vector<int> GetDevicesWithPrefetchSupport() {
   const auto device_count = HipTest::getDeviceCount();
@@ -48,6 +47,7 @@ __global__ void MemPrefetchAsyncKernel(int* C_d, const int* A_d, size_t N) {
 }
 
 TEST_CASE("Unit_hipMemPrefetchAsync_Basic") {
+  GENERATE_CAPTURE();
   const auto supported_devices = GetDevicesWithPrefetchSupport();
   if (supported_devices.empty()) {
     HipTest::HIP_SKIP_TEST("Test need at least one device with managed memory support");
@@ -62,9 +62,11 @@ TEST_CASE("Unit_hipMemPrefetchAsync_Basic") {
     HIP_CHECK(hipSetDevice(device));
     LinearAllocGuard<int> alloc2(LinearAllocs::hipMallocManaged, kPageSize);
     StreamGuard sg(Streams::created);
+    BEGIN_CAPTURE(sg.stream());
     HIP_CHECK(hipMemPrefetchAsync(alloc1.ptr(), kPageSize, device, sg.stream()));
     MemPrefetchAsyncKernel<<<count / 1024 + 1, 1024, 0, sg.stream()>>>(alloc2.ptr(), alloc1.ptr(),
                                                                        count);
+    END_CAPTURE(sg.stream());
     HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamSynchronize(sg.stream()));
     ArrayFindIfNot(alloc1.ptr(), fill_value, count);
@@ -77,6 +79,7 @@ TEST_CASE("Unit_hipMemPrefetchAsync_Basic") {
 }
 
 TEST_CASE("Unit_hipMemPrefetchAsync_Sync_Behavior") {
+  GENERATE_CAPTURE();
   const auto supported_devices = GetDevicesWithPrefetchSupport();
   if (supported_devices.empty()) {
     HipTest::HIP_SKIP_TEST("Test need at least one device with managed memory support");
@@ -86,8 +89,10 @@ TEST_CASE("Unit_hipMemPrefetchAsync_Sync_Behavior") {
 
   StreamGuard sg(stream_type);
   LinearAllocGuard<void> alloc(LinearAllocs::hipMallocManaged, kPageSize);
+  BEGIN_CAPTURE(sg.stream());
   LaunchDelayKernel(std::chrono::milliseconds{100}, sg.stream());
   HIP_CHECK(hipMemPrefetchAsync(alloc.ptr(), kPageSize, device, sg.stream()));
+  END_CAPTURE(sg.stream());
   HIP_CHECK_ERROR(hipStreamQuery(sg.stream()), hipErrorNotReady);
   HIP_CHECK(hipStreamSynchronize(sg.stream()));
 }
@@ -120,7 +125,8 @@ TEST_CASE("Unit_hipMemPrefetchAsync_Rounding_Behavior") {
   HIP_CHECK(hipMemRangeGetAttribute(&attribute, sizeof(attribute),
                                     hipMemRangeAttributeLastPrefetchLocation, alloc.ptr(),
                                     3 * kPageSize));
-  REQUIRE((rounded_up == 3 * kPageSize ? device : hipInvalidDeviceId) == static_cast<int>(attribute));
+  REQUIRE((rounded_up == 3 * kPageSize ? device : hipInvalidDeviceId) ==
+          static_cast<int>(attribute));
 }
 
 TEST_CASE("Unit_hipMemPrefetchAsync_Negative_Parameters") {
@@ -155,4 +161,3 @@ TEST_CASE("Unit_hipMemPrefetchAsync_Negative_Parameters") {
     HIP_CHECK_ERROR(hipMemPrefetchAsync(alloc.ptr(), kPageSize, hipInvalidDeviceId),
                     hipErrorInvalidDevice);
   }
-}
