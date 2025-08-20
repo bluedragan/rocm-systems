@@ -102,7 +102,9 @@ class Roofline:
         if hasattr(self.__args, "sort") and self.__args.sort != "ALL":
             self.__run_parameters["sort_type"] = self.__args.sort
         self.__run_parameters["roofline_data_type"] = self.__args.roofline_data_type
-        if hasattr(self.__args, "kernel") and self.__args.kernel:
+        if (hasattr(self.__args, "kernel") and self.__args.kernel) or (
+            hasattr(self.__args, "gpu_kernel") and self.__args.gpu_kernel
+        ):
             self.__run_parameters["kernel_filter"] = True
         self.validate_parameters()
 
@@ -114,32 +116,45 @@ class Roofline:
                 "--kernel-names is nonactionable when used with --no-roof option"
             )
 
-    def validate_apply_kernel_filter(self, df):
+    def validate_apply_kernel_filter(self, df, mode, path=None):
         if self.__run_parameters["kernel_filter"] is True:
-            df_pmc = df["pmc_perf"]
-            df_filtered = df_pmc.copy()
-            df_list = (df_pmc.loc[:, "Kernel_Name"]).to_list()
-            for idx in range(0, len(df_list)):
-                if df_list[idx].split("(")[0] not in self.__args.kernel:
-                    # Drop row from the dataframe if the kernel has not been requested
-                    df_filtered.drop(index=idx, inplace=True)
-            # Verify that the final filtered kernel df matches the kernel list requested
-            if len(df_filtered.drop_duplicates(subset=["Kernel_Name"])) != len(
-                self.__args.kernel
-            ):
-                console_debug(
-                    "Profiled kernels: {}\n`--kernel`: {}".format(
-                        df_list, self.__args.kernel
+            if mode == "profile":
+                df_pmc = df["pmc_perf"]
+                df_filtered = df_pmc.copy()
+                df_list = (df_pmc.loc[:, "Kernel_Name"]).to_list()
+                for idx in range(0, len(df_list)):
+                    if df_list[idx].split("(")[0] not in self.__args.kernel:
+                        # Drop row from dataframe if kernel has not been requested
+                        df_filtered.drop(index=idx, inplace=True)
+                # Verify that final filtered kernel df matches the kernel list requested
+                if len(df_filtered.drop_duplicates(subset=["Kernel_Name"])) != len(
+                    self.__args.kernel
+                ):
+                    console_debug(
+                        "Profiled kernels: {}\n`--kernel`: {}".format(
+                            df_list, self.__args.kernel
+                        )
                     )
-                )
-                console_error(
-                    "Roofline cannot profile - kernels requested with `--kernel` missing from profiling data!"  # noqa: E501
-                    "\n\tRe-profile workload in full or specify subset of available kernels using `--kernel` option."  # noqa: E501
-                    "\n\tComplete profiled kernels list can be found in pmc_perf file.",
-                    exit=True,
-                )
-            # Fix df structure to resemble same df arg passed in
-            df["pmc_perf"] = df_filtered
+                    console_error(
+                        "Roofline cannot profile - kernels requested with `--kernel` missing from profiling data!"  # noqa: E501
+                        "\n\tRe-profile workload in full or specify subset of available kernels using `--kernel` option."  # noqa: E501
+                        "\n\tComplete profiled kernels list can be found in pmc_perf file.",  # noqa: E501
+                        exit=True,
+                    )
+                # Fix df structure to resemble same df arg passed in
+                df["pmc_perf"] = df_filtered
+            elif mode == "analyze":
+                top_kernels_csv = path / "pmc_kernel_top.csv"
+                if not top_kernels_csv.is_file():
+                    console_error(
+                        "roofline", "{} does not exist".format(top_kernels_csv)
+                    )
+                k_df = pd.read_csv(top_kernels_csv)
+                k_df = k_df.loc[self.__args.gpu_kernel[0], "Kernel_Name"]
+
+                df["pmc_perf"] = df["pmc_perf"][
+                    df["pmc_perf"]["Kernel_Name"].isin(k_df)
+                ]
 
         return df
 
@@ -225,7 +240,7 @@ class Roofline:
             "roofline", "Path: %s" % self.__run_parameters.get("workload_dir")
         )
         # Verify kernels have been profiled and create a filtered dataframe
-        checked_df = self.validate_apply_kernel_filter(ret_df)
+        checked_df = self.validate_apply_kernel_filter(df=ret_df, mode="profile")
         self.__ai_data = calc_ai(
             self.__mspec, self.__run_parameters.get("sort_type"), checked_df
         )
@@ -747,6 +762,10 @@ class Roofline:
         profiling_config = file_io.load_profiling_config(self.__args.path[0][0])
         if profiling_config.get("format_rocprof_output") == "rocpd":
             t_df["pmc_perf"] = rocpd_data.process_rocpd_csv(t_df["pmc_perf"])
+
+        t_df = self.validate_apply_kernel_filter(
+            df=t_df, mode="analyze", path=base_path
+        )
 
         color_scheme = {
             "HBM": "blue+",
