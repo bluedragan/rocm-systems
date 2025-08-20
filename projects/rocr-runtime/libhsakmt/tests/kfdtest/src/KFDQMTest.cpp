@@ -37,6 +37,8 @@
 
 #include "Dispatch.hpp"
 
+const unsigned int FILL_VALUE = 0x01010101;
+
 extern unsigned int g_TestGPUsNum;
 
 void KFDQMTest::SetUp() {
@@ -1662,7 +1664,7 @@ TEST_F(KFDQMTest, QueuePriorityOnSamePipe) {
     TEST_END
 }
 
-void KFDQMTest::SyncDispatch(const HsaMemoryBuffer& isaBuffer, void* pSrcBuf, void* pDstBuf, int node) {
+void KFDQMTest::SyncDispatch(const HsaMemoryBuffer& isaBuffer, void* arg0, void* arg1, int node) {
     PM4Queue queue;
 
     if (node == -1)
@@ -1671,7 +1673,7 @@ void KFDQMTest::SyncDispatch(const HsaMemoryBuffer& isaBuffer, void* pSrcBuf, vo
     ASSERT_GE_GPU(node, 0, node) << "failed to get GPU Node";
 
     Dispatch dispatch(isaBuffer);
-    dispatch.SetArgs(pSrcBuf, pDstBuf);
+    dispatch.SetArgs(arg0, arg1);
     dispatch.SetDim(1, 1, 1);
 
     ASSERT_SUCCESS_GPU(queue.Create(node), node);
@@ -1720,13 +1722,13 @@ void SimpleWriteDispatch(KFDTEST_PARAMETERS* pTestParamters) {
     HsaMemoryBuffer srcBuffer(PAGE_SIZE, gpuNode, false);
     HsaMemoryBuffer destBuffer(PAGE_SIZE, gpuNode);
 
-    srcBuffer.Fill(0x01010101);
+    srcBuffer.Fill(FILL_VALUE);
 
     ASSERT_SUCCESS_GPU(m_pAsm->RunAssembleBuf(CopyDwordIsa, isaBuffer.As<char*>()),gpuNode);
 
     pKFDQMTest->SyncDispatch(isaBuffer, srcBuffer.As<void*>(), destBuffer.As<void*>(), gpuNode);
 
-    EXPECT_EQ(destBuffer.As<unsigned int*>()[0], 0x01010101);
+    EXPECT_EQ(destBuffer.As<unsigned int*>()[0], FILL_VALUE);
 
 }
 
@@ -1736,6 +1738,50 @@ TEST_F(KFDQMTest, SimpleWriteDispatch) {
     ASSERT_SUCCESS(KFDTest_Launch(SimpleWriteDispatch));
 
     TEST_END
+}
+
+void MultipleWordsDispatch(KFDTEST_PARAMETERS* pTestParamters) {
+    int gpuNode = pTestParamters->gpuNode;
+    KFDQMTest* pKFDQMTest = (KFDQMTest*)pTestParamters->pTestObject;
+
+    Assembler* m_pAsm;
+    m_pAsm = pKFDQMTest->GetAssemblerFromNodeId(gpuNode);
+    ASSERT_NOTNULL_GPU(m_pAsm, gpuNode);
+
+    HsaMemoryBuffer isaBuffer(PAGE_SIZE, gpuNode, true, false, true);
+
+    HsaMemoryBuffer srcBuffer(4 * PAGE_SIZE, gpuNode, false);
+    HsaMemoryBuffer destBuffer(4 * PAGE_SIZE, gpuNode);
+
+    const unsigned int bufferSize = (4 * PAGE_SIZE / sizeof(unsigned int));
+
+    srcBuffer.Fill(FILL_VALUE, 0, 4 * PAGE_SIZE);
+
+    HsaMemoryBuffer addrBuffer(PAGE_SIZE, gpuNode);
+    void **localBufAddr = addrBuffer.As<void **>();
+
+    HsaMemoryBuffer sizeBuffer(PAGE_SIZE, gpuNode);
+    unsigned int *sizeBuf = sizeBuffer.As<unsigned int *>();
+
+    localBufAddr[0] = srcBuffer.As<void *>();
+    localBufAddr[1] = destBuffer.As<void *>();
+    sizeBuf[0] = bufferSize;
+
+    ASSERT_SUCCESS_GPU(m_pAsm->RunAssembleBuf(CopyWordsIsa, isaBuffer.As<char*>()), gpuNode);
+
+    pKFDQMTest->SyncDispatch(isaBuffer, localBufAddr, sizeBuf, gpuNode);
+
+    for (unsigned int i = 0; i < bufferSize; ++i) {
+         EXPECT_EQ(destBuffer.As<unsigned int*>()[i], FILL_VALUE);
+    }
+}
+
+TEST_F(KFDQMTest, MultipleWordsDispatch) {
+    TEST_START(TESTPROFILE_RUNALL);
+
+    ASSERT_SUCCESS(KFDTest_Launch(MultipleWordsDispatch));
+
+    TEST_END;
 }
 
 static void MultipleCpQueuesStressDispatch(KFDTEST_PARAMETERS* pTestParamters) {
