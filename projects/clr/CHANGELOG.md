@@ -2,6 +2,12 @@
 
 Full documentation for HIP is available at [rocm.docs.amd.com](https://rocm.docs.amd.com/projects/HIP/en/latest/index.html)
 
+## HIP 7.2 for ROCm 7.2
+
+### Optimized
+* Removed Perl - package level dependency. 
+* roc-obj* - are now removed from hip and migrated to llvm. Refer to llvm-objdump for these tools.
+
 ## HIP 7.1 for ROCm 7.1
 
 ### Added
