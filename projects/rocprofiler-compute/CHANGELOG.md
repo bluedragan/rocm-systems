@@ -56,6 +56,8 @@ Full documentation for ROCm Compute Profiler is available at [https://rocm.docs.
   * L1I-L2 Bandwidth
   * sL1D-L2 BW
 
+* Add kernel filtering to Roofline plots when --kernel option is provided in profile mode, or in analyze CLI or GUI mode
+
 ### Changed
 
 * On memory chart, long string of numbers are displayed as scientific notation. It also solves the issue of overflow of displaying long number
@@ -72,8 +74,6 @@ Full documentation for ROCm Compute Profiler is available at [https://rocm.docs.
   * Remove metrics from analysis configuration files which are explicitly marked as empty or None
 
 * Changed the basic (default) view of TUI from aggregated analysis data to individual kernel analysis data.
-
-* Updated Roofline plots to handle and apply kernel filtering.
 
 * Update `Unit` of the following `Bandwidth` related metrics to `Gbps` instead of `Bytes per Normalization Unit`
   * Theoretical Bandwidth (section 1202)
@@ -139,7 +139,6 @@ Full documentation for ROCm Compute Profiler is available at [https://rocm.docs.
 * Fixed L2 read/write/atomic bandwidths on AMD Instinct MI350 series accelerators.
 * Update metric names for better alignment between analysis configuration and documentation
 * Fixed an issue where accumulation counters could not be collected on AMD Instinct MI100.
-* Updated Roofline plots to handle and apply kernel filtering.
 
 ### Known issues
 
