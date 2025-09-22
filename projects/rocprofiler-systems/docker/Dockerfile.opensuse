@@ -25,7 +25,7 @@ RUN zypper --non-interactive update -y && \
     zypper --non-interactive install -y -t pattern devel_basis && \
     zypper --non-interactive install -y binutils-gold chrpath cmake curl dpkg-devel \
         gcc-c++ git iproute2 libdrm-devel libnuma-devel ninja openmpi3-devel python3-pip rpm-build \
-        sqlite3-devel wget  && \
+        sqlite3-devel wget nlohmann_json-devel && \
     python3 -m pip install 'cmake==3.21'
 
 ARG ROCM_VERSION=0.0
@@ -50,16 +50,3 @@ RUN ROCM_MAJOR=$(echo "${ROCM_VERSION}" | sed 's/\./ /g' | awk '{print $1}') && 
     fi
 
 ARG PYTHON_VERSIONS="6 7 8 9 10 11 12 13"
-
-RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O miniforge.sh && \
-    bash miniforge.sh -b -p /opt/conda && \
-    export PATH="/opt/conda/bin:${PATH}" && \
-    conda config --set always_yes yes --set changeps1 no && \
-    conda update -c conda-forge -n base conda && \
-    for i in ${PYTHON_VERSIONS}; do conda create -n py3.${i} -c conda-forge python=3.${i} pip; done && \
-    for i in ${PYTHON_VERSIONS}; do /opt/conda/envs/py3.${i}/bin/python -m pip install numpy perfetto dataclasses; done && \
-    conda clean -a -y && \
-    conda init
-
-WORKDIR /home
-SHELL [ "/bin/bash", "--login", "-c" ]
