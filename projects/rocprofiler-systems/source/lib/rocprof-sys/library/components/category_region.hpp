@@ -31,13 +31,108 @@
 #include "library/tracing.hpp"
 #include "library/tracing/annotation.hpp"
 
+#include <map>
+#include <nlohmann/detail/value_t.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <timemory/components/gotcha/backends.hpp>
 #include <timemory/hash/types.hpp>
 #include <timemory/mpl/concepts.hpp>
 #include <timemory/mpl/types.hpp>
 #include <timemory/utility/types.hpp>
 
+#include "core/trace_cache/cache_manager.hpp"
+
+#include "common/traits.hpp"
 #include <string_view>
+
+#include <nlohmann/json.hpp>
+#include <utility>
+
+namespace
+{
+
+void
+cache_region(uint64_t thread_id, const std::string& name, uint64_t start_ts,
+             uint64_t end_ts, const std::string& category, const std::string& ext_data)
+{
+    rocprofsys::trace_cache::get_buffer_storage().store(
+        rocprofsys::trace_cache::entry_type::region_with_name, thread_id, name.c_str(),
+        start_ts, end_ts, category.c_str(), ext_data.c_str());
+}
+struct entry_key
+{
+    std::string name;
+    std::string category;
+
+    friend bool operator<(const entry_key& lhs, const entry_key& rhs)
+    {
+        return lhs.name < rhs.name && lhs.category < rhs.category;
+    }
+};
+
+struct entry_value
+{
+    long        _timestamp;
+    std::string _args;
+};
+
+thread_local std::map<entry_key, entry_value>
+    map_name_to_args;  // should it be thread_local
+
+template <typename ArgValue, typename... Args>
+void
+parse_args(nlohmann::json& json, const char* arg_name, const ArgValue& arg_val,
+           Args&&... args)
+{
+    if constexpr(std::is_same_v<std::basic_string<char>, ArgValue> ||
+                 std::is_same_v<bool, ArgValue> || std::is_same_v<long, ArgValue> ||
+                 std::is_same_v<unsigned long, ArgValue> ||
+                 std::is_same_v<double, ArgValue> ||
+                 std::is_same_v<std::vector<unsigned char>, ArgValue> ||
+                 std::is_same_v<void, ArgValue>)
+    {
+        json[arg_name] = arg_val;
+    }
+
+    if constexpr(sizeof...(Args) >= 2)
+    {
+        parse_args(json, std::forward<Args>(args)...);
+    }
+}
+
+template <typename CategoryT, typename... Args>
+void
+cache_start(const char* name, Args&&... args)
+{
+    auto           start_ts = rocprofsys::comp::wall_clock::record();
+    nlohmann::json _json;
+    if constexpr(sizeof...(Args) >= 2)
+    {
+        parse_args(_json, std::forward<Args>(args)...);
+    }
+
+    map_name_to_args[{ name, rocprofsys::trait::name<CategoryT>::value }] =
+        entry_value{ start_ts, _json.dump() };
+}
+
+template <typename CategoryT>
+void
+cache_stop(const char* name)
+{
+    entry_key key{ name, rocprofsys::trait::name<CategoryT>::value };
+    auto      x = map_name_to_args.find(key);
+    if(x != map_name_to_args.end())
+    {
+        map_name_to_args.erase(key);
+        auto value = x->second;
+
+        auto end_ts    = rocprofsys::comp::wall_clock::record();
+        auto thread_id = rocprofsys::threading::get_sys_tid();
+        cache_region(thread_id, name, value._timestamp, end_ts,
+                     rocprofsys::trait::name<CategoryT>::value, value._args);
+    }
+}
+}  // namespace
 
 namespace tim
 {
@@ -191,6 +286,8 @@ category_region<CategoryT>::start(std::string_view name, Args&&... args)
             tracing::push_perfetto(CategoryT{}, name.data(), std::forward<Args>(args)...);
         }
     }
+
+    cache_start<CategoryT>(name.data(), std::forward<Args>(args)...);
 }
 
 template <typename CategoryT>
@@ -256,6 +353,8 @@ category_region<CategoryT>::stop(std::string_view name, Args&&... args)
                 if(get_use_causal()) causal::pop_progress_point(name);
             }
         }
+
+        cache_stop<CategoryT>(name.data());
     }
     else
     {

@@ -243,6 +243,19 @@ storage_parser::consume_storage()
                     _backtrace_region_sample.call_stack,
                     _backtrace_region_sample.line_info, _backtrace_region_sample.extdata);
                 invoke_callbacks(header.type, _backtrace_region_sample);
+                break;
+            }
+            case entry_type::region_with_name:
+            {
+                region_sample_with_name _region_sample_with_name;
+                parse_data(sample.data(), _region_sample_with_name.thread_id,
+                           _region_sample_with_name.name,
+                           _region_sample_with_name.start_timestamp,
+                           _region_sample_with_name.end_timestamp,
+                           _region_sample_with_name.category,
+                           _region_sample_with_name.ext_data);
+                invoke_callbacks(header.type, _region_sample_with_name);
+                break;
             }
             default: break;
         }

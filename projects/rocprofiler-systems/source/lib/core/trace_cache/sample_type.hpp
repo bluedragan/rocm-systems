@@ -241,17 +241,41 @@ struct backtrace_region_sample : storage_parsed_type_base
     uint32_t    type;
     uint64_t    thread_id;
     std::string track_name;
+
     std::string name;
 
     uint64_t start_timestamp;
     uint64_t end_timestamp;
 
     std::string category;
+
     std::string call_stack;
     std::string line_info;
     std::string extdata;
 };
 
+struct region_sample_with_name : storage_parsed_type_base
+{
+    region_sample_with_name() = default;
+    region_sample_with_name(uint64_t _thread_id, uint64_t _start_timestamp,
+                            uint64_t _end_timestamp, std::string _category,
+                            std::string _ext_data)
+    : thread_id(_thread_id)
+    , start_timestamp(_start_timestamp)
+    , end_timestamp(_end_timestamp)
+    , category(std::move(_category))
+    , ext_data(std::move(_ext_data))
+    {}
+
+    uint64_t    thread_id;
+    std::string name;
+
+    uint64_t start_timestamp;
+    uint64_t end_timestamp;
+
+    std::string category;
+    std::string ext_data;
+};
 enum class entry_type : uint32_t
 {
     in_time_sample        = 0x0000,
@@ -265,6 +289,7 @@ enum class entry_type : uint32_t
     amd_smi_sample          = 0x0006,
     cpu_freq_sample         = 0x0007,
     backtrace_region_sample = 0x0008,
+    region_with_name        = 0x0009,
     fragmented_space        = 0xFFFF
 };
 }  // namespace trace_cache

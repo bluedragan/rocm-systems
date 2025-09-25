@@ -60,6 +60,7 @@ private:
     postprocessing_callback get_amd_smi_sample_callback() const;
     postprocessing_callback get_cpu_freq_sample_callback() const;
     postprocessing_callback get_backtrace_sample_callback() const;
+    postprocessing_callback get_region_with_name_callback() const;
 
     metadata_registry&                     m_metadata;
     agent_manager&                         m_agent_manager;

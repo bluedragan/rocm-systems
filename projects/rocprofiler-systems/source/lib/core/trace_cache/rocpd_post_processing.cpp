@@ -659,6 +659,38 @@ rocpd_post_processing::get_cpu_freq_sample_callback() const
     };
 }
 
+postprocessing_callback
+rocpd_post_processing::get_region_with_name_callback() const
+{
+    return [&]([[maybe_unused]] const storage_parsed_type_base& parsed) {
+#if ROCPROFSYS_USE_ROCM > 0
+        auto  _rs            = static_cast<const struct region_sample_with_name&>(parsed);
+        auto  data_processor = get_data_processor();
+        auto& n_info         = node_info::get_instance();
+        auto  process        = m_metadata.get_process_info();
+        auto  thread_primary_key =
+            data_processor->map_thread_id_to_primary_key(_rs.thread_id);
+
+        auto callback_tracing_info = m_metadata.get_callback_tracing_info();
+        auto _name                 = _rs.name;
+        auto name_primary_key      = data_processor->insert_string(_name.c_str());
+
+        auto category_primary_key = data_processor->insert_string(_rs.category.c_str());
+
+        size_t stack_id        = 0;
+        size_t parent_stack_id = 0;
+        size_t correlation_id  = 0;
+
+        auto event_primary_key = data_processor->insert_event(
+            category_primary_key, stack_id, parent_stack_id, correlation_id, "");
+
+        data_processor->insert_region(
+            n_info.id, process.pid, thread_primary_key, _rs.start_timestamp,
+            _rs.end_timestamp, name_primary_key, event_primary_key, _rs.ext_data.c_str());
+#endif
+    };
+}
+
 rocpd_post_processing::rocpd_post_processing(metadata_registry& md,
                                              agent_manager&     agent_mngr,
                                              const std::string& _database_tag)
@@ -692,6 +724,8 @@ rocpd_post_processing::register_parser_callback([[maybe_unused]] storage_parser&
                                   get_amd_smi_sample_callback());
     parser.register_type_callback(entry_type::cpu_freq_sample,
                                   get_cpu_freq_sample_callback());
+    parser.register_type_callback(entry_type::region_with_name,
+                                  get_region_with_name_callback());
     parser.register_type_callback(entry_type::backtrace_region_sample,
                                   get_backtrace_sample_callback());
     ROCPROFSYS_DEBUG("Buffer parser callbacks are registered..\n");
