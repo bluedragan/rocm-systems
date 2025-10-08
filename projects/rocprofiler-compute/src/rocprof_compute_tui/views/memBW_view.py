@@ -1,30 +1,43 @@
-from __future__ import annotations
+##############################################################################
+# MIT License
+#
+# Copyright (c) 2025 Advanced Micro Devices, Inc. All Rights Reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+##############################################################################
 
 from typing import Any, Optional
 
+import yaml
 from textual import events
 from textual.app import ComposeResult
 from textual.containers import Container, VerticalScroll
 from textual.widgets import Label
 
-# Use the same decision-tree renderer already used by your app
-# (TreeNode/TreeCanvas implement the drawing, selection, and navigation)
-from rocprof_compute_tui.widgets.decision_tree import TreeCanvas, TreeNode
 from rocprof_compute_tui.utils.tui_utils import Logger
-
-import yaml
+from rocprof_compute_tui.widgets.decision_tree import TreeCanvas, TreeNode
 
 
 class MemBWView(Container):
     """
     Memory Bandwidth Guided Analysis (Center Panel View)
-    ---------------------------------------------------
-    Structured like KernelView: a self-contained center-panel widget that can be
-    yielded inside a TabPane (no MenuBar/RightPanel/TabsArea here).
-
-    - Provides a scrollable area that hosts the decision tree canvas
-    - Exposes update_view(message, log_level) for status updates (parity with KernelView)
-    - Loads tree YAML at init; you can also call set_tree_data() to swap trees
     """
 
     DEFAULT_CSS = """
@@ -50,10 +63,12 @@ class MemBWView(Container):
         self.status_label: Optional[Label] = None
         self.tree_canvas: Optional[TreeCanvas] = None
 
-        # Load decision tree from YAML (default path if not provided)
-        yaml_path = tree_yaml or "src/rocprof_compute_tui/utils/mem_bw_decision_tree.yaml"
+        # Load decision tree from YAML
+        yaml_path = (
+            tree_yaml or "src/rocprof_compute_tui/utils/mem_bw_decision_tree.yaml"
+        )
         try:
-            with open(yaml_path, "r", encoding="utf-8") as f:
+            with open(yaml_path) as f:
                 tree_data = yaml.safe_load(f)
             self.root = TreeNode.from_dict(tree_data)
         except Exception as e:

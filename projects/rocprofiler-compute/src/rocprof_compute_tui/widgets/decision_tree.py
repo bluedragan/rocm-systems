@@ -35,7 +35,7 @@ class TreeNode:
 
     def __init__(
         self, label: str, metadata: str = "", children: list["TreeNode"] | None = None
-    ):
+    ) -> None:
         self.label = label
         self.metadata = metadata
         self.children: list[TreeNode] = children or []
@@ -93,7 +93,7 @@ class TreeNode:
 class TreeCanvas(Static):
     """Canvas for rendering the tree (refactored; behavior unchanged)."""
 
-    def __init__(self, root: TreeNode):
+    def __init__(self, root: TreeNode) -> None:
         super().__init__()
         self.root = root
         self.selected = root
@@ -375,7 +375,6 @@ class TreeCanvas(Static):
             self.root.calculate_positions(0, 0)
             self.refresh(layout=True)
 
-
     def _find_parent(
         self, target: TreeNode, root: TreeNode | None = None
     ) -> TreeNode | None:
@@ -405,8 +404,9 @@ class TreeCanvas(Static):
                 self.selected = sibs[nxt]
         self.refresh()
 
-    async def on_resize(self, event) -> None:
+    async def on_resize(self) -> None:
         self.refresh()
+
     async def on_mouse_down(self, event: events.MouseDown) -> None:
         """Handle mouse click to select a node."""
         x, y = event.x, event.y

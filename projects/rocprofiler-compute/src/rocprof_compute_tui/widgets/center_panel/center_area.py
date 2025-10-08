@@ -58,8 +58,8 @@ class CenterPanel(Vertical):
         with TabsTabbedContent(initial="tab-kernel"):
             with TabPane("Basic View", id="tab-kernel"):
                 yield self.kernel_view
-            with TabPane("Memory BW Guided Analysis", id="tab-membw"):
-                yield self.membw_view
+            # with TabPane("Memory BW Guided Analysis", id="tab-membw"):
+            #    yield self.membw_view
 
     def on_mount(self) -> None:
         self.add_class("section")
