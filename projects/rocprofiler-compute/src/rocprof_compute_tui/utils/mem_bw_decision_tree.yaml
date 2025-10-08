@@ -1,0 +1,43 @@
+label: Workload Memory Bandwidth Guidance
+children:
+- label: High EA -> L2 Backpressure
+  children:
+  - label: SoC Tunning
+  - label: High TCR -> TCP Backpressure
+    children:
+    - label: vL1d Hit Low
+      children:
+      - label: Non-Temporal set
+        children:
+        - label: Try non-temporal (NT)
+        - label: High TC -> TA Backpressure
+          children:
+          - label: High TA -> VMEM Backpressure
+            children:
+            - label: SW optimization
+            - label:  |-
+                Bottleneck: Workload
+          - label: High vL1d set full stall
+            children:
+            - label: Tagram hotspotting
+              children:
+              - label:  |-
+                  Bottleneck: TCP capacity
+              - label: SW optimization
+              - label: UTCL1 Stall
+                children:
+                - label: UTCL1 Latency
+                  children:
+                  - label: |-
+                      Bottleneck: UTCL2
+    - label: L2 Channel hotspotting
+      children:
+      - label: SW optimization
+      - label: L2 Hit Low
+        children:
+        - label: Try non-temporal (NT)
+        - label: Write Traffic
+          children:
+          - label: Unlikely
+          - label: |-
+              Bottleneck: L2 Arb
