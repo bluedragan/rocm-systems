@@ -2068,3 +2068,9 @@ hipError_t hipKernelGetParamInfo(hipKernel_t kernel, size_t paramIndex, size_t* 
   return hip::GetHipDispatchTable()->hipKernelGetParamInfo_fn(kernel, paramIndex, paramOffset,
                                                               paramSize);
 }
+hipError_t hipKernelSetAttribute(hipFunction_attribute attrib, int value, hipKernel_t kernel, hipDevice_t dev) {
+  return hip::GetHipDispatchTable()->hipKernelSetAttribute_fn(attrib, value, kernel, dev);
+}
+hipError_t hipKernelGetFunction(hipFunction_t* pFunc, hipKernel_t kernel) {
+  return hip::GetHipDispatchTable()->hipKernelGetFunction_fn(pFunc, kernel);
+}

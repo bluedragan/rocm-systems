@@ -3377,6 +3377,18 @@ typedef union rocprofiler_hip_api_args_t
         size_t*     paramSize;
     } hipKernelGetParamInfo;
 #endif
+#if HIP_RUNTIME_API_TABLE_STEP_VERSION >= 21
+    struct
+    {
+        hipFunction_attribute attrib;
+        int                   value;
+        hipKernel_t           kernel;
+        hipDevice_t           dev;
+    } hipKernelSetAttribute;
+    struct
+    {
+        hipFunction_t* pFunc;
+        hipKernel_t    kernel;
+    } hipKernelGetFunction;
+#endif
 } rocprofiler_hip_api_args_t;
-
-ROCPROFILER_EXTERN_C_FINI
