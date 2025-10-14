@@ -33,7 +33,7 @@ from textual.containers import Vertical
 from textual.widgets import TabPane, TextArea
 
 from rocprof_compute_tui.widgets.tabbed_content import TabsTabbedContent
-from rocprof_compute_tui.widgets.tabs.tabs_terminal import Terimnal
+from rocprof_compute_tui.widgets.tabs.tabs_terminal import Terminal
 
 
 class TabsArea(Vertical):
@@ -66,7 +66,7 @@ class TabsArea(Vertical):
                 yield (self.output_area)
 
             with TabPane("TERMINAL", id="tab-terminal"):
-                yield Terimnal()
+                yield Terminal()
 
     def on_mount(self) -> None:
         self.add_class("section")

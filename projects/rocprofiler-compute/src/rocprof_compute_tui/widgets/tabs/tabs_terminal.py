@@ -36,7 +36,7 @@ from textual.containers import Container, Vertical, VerticalScroll
 from textual.widgets import Input, Static
 
 
-class Terimnal(Container):
+class Terminal(Container):
     def __init__(
         self,
         name: Optional[str] = None,
