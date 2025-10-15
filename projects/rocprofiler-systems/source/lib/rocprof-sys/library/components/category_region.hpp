@@ -28,12 +28,14 @@
 #include "core/timemory.hpp"
 #include "library/causal/data.hpp"
 #include "library/runtime.hpp"
+#include "library/thread_info.hpp"
 #include "library/tracing.hpp"
 #include "library/tracing/annotation.hpp"
 
 #include <map>
 #include <nlohmann/detail/value_t.hpp>
 #include <nlohmann/json_fwd.hpp>
+#include <thread>
 #include <timemory/components/gotcha/backends.hpp>
 #include <timemory/hash/types.hpp>
 #include <timemory/mpl/concepts.hpp>
@@ -43,6 +45,7 @@
 #include "core/trace_cache/cache_manager.hpp"
 
 #include "common/traits.hpp"
+#include "timemory/process/threading.hpp"
 #include <string_view>
 
 #include <nlohmann/json.hpp>
@@ -76,8 +79,7 @@ struct entry_value
     std::string _args;
 };
 
-thread_local std::map<entry_key, entry_value>
-    map_name_to_args;  // should it be thread_local
+thread_local std::map<entry_key, entry_value> map_name_to_args;
 
 template <typename ArgValue, typename... Args>
 void
@@ -126,8 +128,17 @@ cache_stop(const char* name)
         map_name_to_args.erase(key);
         auto value = x->second;
 
-        auto end_ts    = rocprofsys::comp::wall_clock::record();
-        auto thread_id = rocprofsys::threading::get_sys_tid();
+        auto        end_ts    = rocprofsys::comp::wall_clock::record();
+        uint64_t    thread_id = 0;
+        const auto& extended_info =
+            rocprofsys::thread_info::get(std::this_thread::get_id());
+        if(extended_info.has_value() && extended_info->index_data.has_value())
+        {
+            thread_id = extended_info->index_data->system_value;
+            rocprofsys::trace_cache::get_metadata_registry().add_thread_info(
+                { getppid(), getpid(), thread_id, 0, 0, "{}" });
+        }
+
         cache_region(thread_id, name, value._timestamp, end_ts,
                      rocprofsys::trait::name<CategoryT>::value, value._args);
     }
