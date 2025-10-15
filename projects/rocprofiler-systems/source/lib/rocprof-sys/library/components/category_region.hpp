@@ -44,8 +44,6 @@
 
 #include "core/trace_cache/cache_manager.hpp"
 
-#include "common/traits.hpp"
-#include "timemory/process/threading.hpp"
 #include <string_view>
 
 #include <nlohmann/json.hpp>
@@ -56,12 +54,14 @@ namespace
 
 void
 cache_region(uint64_t thread_id, const std::string& name, uint64_t start_ts,
-             uint64_t end_ts, const std::string& category, const std::string& ext_data)
+             uint64_t end_ts, const std::string& category)
 {
+    size_t zero = 0;
     rocprofsys::trace_cache::get_buffer_storage().store(
-        rocprofsys::trace_cache::entry_type::region_with_name, thread_id, name.c_str(),
-        start_ts, end_ts, category.c_str(), ext_data.c_str());
+        rocprofsys::trace_cache::entry_type::region, thread_id, name.c_str(), zero, zero,
+        start_ts, end_ts, "", "", category.c_str());
 }
+
 struct entry_key
 {
     std::string name;
@@ -73,48 +73,17 @@ struct entry_key
     }
 };
 
-struct entry_value
-{
-    long        _timestamp;
-    std::string _args;
-};
+using timestamp_t = long;
 
-thread_local std::map<entry_key, entry_value> map_name_to_args;
-
-template <typename ArgValue, typename... Args>
-void
-parse_args(nlohmann::json& json, const char* arg_name, const ArgValue& arg_val,
-           Args&&... args)
-{
-    if constexpr(std::is_same_v<std::basic_string<char>, ArgValue> ||
-                 std::is_same_v<bool, ArgValue> || std::is_same_v<long, ArgValue> ||
-                 std::is_same_v<unsigned long, ArgValue> ||
-                 std::is_same_v<double, ArgValue> ||
-                 std::is_same_v<std::vector<unsigned char>, ArgValue> ||
-                 std::is_same_v<void, ArgValue>)
-    {
-        json[arg_name] = arg_val;
-    }
-
-    if constexpr(sizeof...(Args) >= 2)
-    {
-        parse_args(json, std::forward<Args>(args)...);
-    }
-}
+thread_local std::map<entry_key, timestamp_t> map_name_to_args;
 
 template <typename CategoryT, typename... Args>
 void
-cache_start(const char* name, Args&&... args)
+cache_start(const char* name)
 {
-    auto           start_ts = rocprofsys::comp::wall_clock::record();
-    nlohmann::json _json;
-    if constexpr(sizeof...(Args) >= 2)
-    {
-        parse_args(_json, std::forward<Args>(args)...);
-    }
+    auto start_ts = rocprofsys::comp::wall_clock::record();
 
-    map_name_to_args[{ name, rocprofsys::trait::name<CategoryT>::value }] =
-        entry_value{ start_ts, _json.dump() };
+    map_name_to_args[{ name, rocprofsys::trait::name<CategoryT>::value }] = start_ts;
 }
 
 template <typename CategoryT>
@@ -126,7 +95,7 @@ cache_stop(const char* name)
     if(x != map_name_to_args.end())
     {
         map_name_to_args.erase(key);
-        auto value = x->second;
+        auto timestamp = x->second;
 
         auto        end_ts    = rocprofsys::comp::wall_clock::record();
         uint64_t    thread_id = 0;
@@ -139,8 +108,8 @@ cache_stop(const char* name)
                 { getppid(), getpid(), thread_id, 0, 0, "{}" });
         }
 
-        cache_region(thread_id, name, value._timestamp, end_ts,
-                     rocprofsys::trait::name<CategoryT>::value, value._args);
+        cache_region(thread_id, name, timestamp, end_ts,
+                     rocprofsys::trait::name<CategoryT>::value);
     }
 }
 }  // namespace
@@ -298,7 +267,7 @@ category_region<CategoryT>::start(std::string_view name, Args&&... args)
         }
     }
 
-    cache_start<CategoryT>(name.data(), std::forward<Args>(args)...);
+    cache_start<CategoryT>(name.data());
 }
 
 template <typename CategoryT>

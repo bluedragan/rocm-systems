@@ -130,13 +130,12 @@ struct memory_allocate_sample : storage_parsed_type_base
 struct region_sample : storage_parsed_type_base
 {
     region_sample() = default;
-    region_sample(uint64_t _thread_id, int32_t _kind, int32_t _operation,
+    region_sample(uint64_t _thread_id, std::string _name,
                   uint64_t _correlation_id_internal, uint64_t _correlation_id_ancestor,
                   uint64_t _start_timestamp, uint64_t _end_timestamp,
                   std::string _call_stack, std::string _args_str, std::string _category)
     : thread_id(_thread_id)
-    , kind(_kind)
-    , operation(_operation)
+    , name(std::move(_name))
     , correlation_id_internal(_correlation_id_internal)
     , correlation_id_ancestor(_correlation_id_ancestor)
     , start_timestamp(_start_timestamp)
@@ -146,9 +145,8 @@ struct region_sample : storage_parsed_type_base
     , category(std::move(_category))
     {}
 
-    uint64_t thread_id;
-    int32_t  kind;
-    int32_t  operation;
+    uint64_t    thread_id;
+    std::string name;
 
     uint64_t correlation_id_internal;
     uint64_t correlation_id_ancestor;
@@ -254,28 +252,6 @@ struct backtrace_region_sample : storage_parsed_type_base
     std::string extdata;
 };
 
-struct region_sample_with_name : storage_parsed_type_base
-{
-    region_sample_with_name() = default;
-    region_sample_with_name(uint64_t _thread_id, uint64_t _start_timestamp,
-                            uint64_t _end_timestamp, std::string _category,
-                            std::string _ext_data)
-    : thread_id(_thread_id)
-    , start_timestamp(_start_timestamp)
-    , end_timestamp(_end_timestamp)
-    , category(std::move(_category))
-    , ext_data(std::move(_ext_data))
-    {}
-
-    uint64_t    thread_id;
-    std::string name;
-
-    uint64_t start_timestamp;
-    uint64_t end_timestamp;
-
-    std::string category;
-    std::string ext_data;
-};
 enum class entry_type : uint32_t
 {
     in_time_sample        = 0x0000,
@@ -289,7 +265,6 @@ enum class entry_type : uint32_t
     amd_smi_sample          = 0x0006,
     cpu_freq_sample         = 0x0007,
     backtrace_region_sample = 0x0008,
-    region_with_name        = 0x0009,
     fragmented_space        = 0xFFFF
 };
 }  // namespace trace_cache
