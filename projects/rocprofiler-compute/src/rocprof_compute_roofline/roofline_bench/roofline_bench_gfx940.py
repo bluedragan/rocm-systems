@@ -1,0 +1,43 @@
+##############################################################################
+# MIT License
+#
+# Copyright (c) 2021 - 2025 Advanced Micro Devices, Inc. All Rights Reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+##############################################################################
+
+from enum import IntEnum
+
+from rocprof_compute_roofline.roofline_bench.roofline_bench_gfx942 import (
+    RooflineBench_GFX942,
+)
+
+
+class RooflineBench_GFX940(RooflineBench_GFX942):
+    def __init__(self) -> None:
+        self.ARCH_SPECS = self.ENUM_ARCH_SPECS
+
+    # GFX940 has a lower CU count than the base GFX942 arch
+    class ENUM_ARCH_SPECS(IntEnum):
+        L1 = (32 * 1024,)
+        L2 = (4 * 1024 * 1024,)
+        MALL = (64 * 1024 * 1024,)
+        LDS = (64 * 1024,)
+        CU = 228

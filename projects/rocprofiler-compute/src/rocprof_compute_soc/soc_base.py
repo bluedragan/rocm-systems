@@ -36,7 +36,7 @@ from typing import Any, Optional
 import yaml
 
 import config
-from roofline import Roofline
+from rocprof_compute_roofline.roofline import Roofline
 from utils.logger import (
     console_debug,
     console_error,

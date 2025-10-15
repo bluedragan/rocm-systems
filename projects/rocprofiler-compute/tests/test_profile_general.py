@@ -780,7 +780,7 @@ def test_roofline_workload_dir_not_set_error():
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
     try:
-        from roofline import Roofline
+        from rocprof_compute_roofline.roofline import Roofline
         from utils.specs import generate_machine_specs
 
         class MockArgs:
@@ -1049,7 +1049,7 @@ def test_roofline_missing_file_handling(binary_handler_profile_rocprof_compute):
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
     try:
-        from roofline import Roofline
+        from rocprof_compute_roofline.roofline import Roofline
         from utils.specs import generate_machine_specs
 
         class MockArgs:
@@ -1103,7 +1103,7 @@ def test_roofline_invalid_datatype_cli(binary_handler_profile_rocprof_compute):
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
     try:
-        from roofline import Roofline
+        from rocprof_compute_roofline.roofline import Roofline
         from utils.specs import generate_machine_specs
 
         class MockArgs:

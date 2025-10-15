@@ -34,6 +34,12 @@ import pandas as pd
 import utils.analysis_orm as orm
 from config import rocprof_compute_home
 from rocprof_compute_analyze.analysis_base import OmniAnalyze_Base
+from rocprof_compute_roofline.roofline_calc import (
+    CACHE_HIERARCHY,
+    MFMA_DATATYPES,
+    PEAK_OPS_DATATYPES,
+    SUPPORTED_DATATYPES,
+)
 from utils import rocpd_data
 from utils.analysis_orm import Database, get_views
 from utils.logger import console_debug, console_error, console_warning, demarcate
@@ -52,12 +58,6 @@ from utils.parser import (
     to_round,
     to_std,
     to_sum,
-)
-from utils.roofline_calc import (
-    CACHE_HIERARCHY,
-    MFMA_DATATYPES,
-    PEAK_OPS_DATATYPES,
-    SUPPORTED_DATATYPES,
 )
 from utils.utils import get_uuid, get_version
 

@@ -37,6 +37,14 @@ import plotext as plt
 import plotly.graph_objects as go
 from dash import dcc, html
 
+from rocprof_compute_roofline.roofline_calc import (
+    MFMA_DATATYPES,
+    PEAK_OPS_DATATYPES,
+    SUPPORTED_DATATYPES,
+    calc_ai_analyze,
+    calc_ai_profile,
+    construct_roof,
+)
 from utils import file_io, rocpd_data, schema
 from utils.logger import (
     console_debug,
@@ -44,14 +52,6 @@ from utils.logger import (
     console_log,
     console_warning,
     demarcate,
-)
-from utils.roofline_calc import (
-    MFMA_DATATYPES,
-    PEAK_OPS_DATATYPES,
-    SUPPORTED_DATATYPES,
-    calc_ai_analyze,
-    calc_ai_profile,
-    construct_roof,
 )
 from utils.specs import MachineSpecs
 

@@ -36,6 +36,7 @@ numpy python library: BSD
 pandas python library: BSD
 plotext python library: MIT
 plotille python library: MIT
+pyhip-interface: MIT
 pymongo python library: Apache 2.0 license
 pyyaml python library: MIT
 setuptools python library: MIT
