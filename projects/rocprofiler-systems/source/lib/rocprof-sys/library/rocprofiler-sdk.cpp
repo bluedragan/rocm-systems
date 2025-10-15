@@ -931,7 +931,7 @@ ompt_cache_instant_event(
 
     cache_category<category::rocm_ompt_api>();
     cache_add_thread_info(record.thread_id);
-    cache_region(&record, _instant_ts, _instant_ts, call_stack->to_string(),
+    cache_region(&record, _instant_ts, _instant_ts, call_stack.dump(),
                  get_args_string(args), trait::name<category::rocm_ompt_api>::value);
 }
 
@@ -945,7 +945,7 @@ ompt_cache_orphan_event(
     cache_category<category::rocm_ompt_api>();
     cache_add_thread_info(stored_data.record.thread_id);
     cache_region(&stored_data.record, stored_data._beg_ts, stored_data._beg_ts,
-                 call_stack->to_string(), get_args_string(stored_data.args),
+                 call_stack.dump(), get_args_string(stored_data.args),
                  trait::name<category::rocm_ompt_api>::value);
 }
 
@@ -1013,7 +1013,7 @@ ompt_pop_standard_callback(
     auto call_stack = get_backtrace(_bt_data);
     cache_category<category::rocm_ompt_api>();
     cache_add_thread_info(record.thread_id);
-    cache_region(&record, stored_data._beg_ts, _end_ts, call_stack->to_string(),
+    cache_region(&record, stored_data._beg_ts, _end_ts, call_stack.dump(),
                  get_args_string(stored_data.args),
                  trait::name<category::rocm_ompt_api>::value);
 }
@@ -1063,7 +1063,7 @@ ompt_pop_parallel_callback(
 
     cache_category<category::rocm_ompt_api>();
     cache_add_thread_info(record.thread_id);
-    cache_region(&record, stored_data._beg_ts, _end_ts, call_stack->to_string(),
+    cache_region(&record, stored_data._beg_ts, _end_ts, call_stack.dump(),
                  get_args_string(stored_data.args),
                  trait::name<category::rocm_ompt_api>::value);
 }
