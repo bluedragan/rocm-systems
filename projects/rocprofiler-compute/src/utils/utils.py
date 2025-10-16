@@ -681,7 +681,7 @@ def parse_text(text_file: str) -> list[str]:
 
 
 def run_prof(
-    fname: str,
+    fnames: list[str],
     profiler_options: Union[list[str], dict[str, Union[str, list[str]]]],
     workload_dir: str,
     mspec: Any,  # noqa: ANN401
@@ -689,6 +689,7 @@ def run_prof(
     format_rocprof_output: str,
     retain_rocpd_output: bool = False,
 ) -> None:
+    fname = fnames[0]
     fpath = Path(fname)
     fbase = fpath.stem
     console_debug(f"pmc file: {fpath.name}")
