@@ -6,13 +6,31 @@ Full documentation for ROCm Compute Profiler is available at [https://rocm.docs.
 
 ### Added
 
+* Counter collection will be performed using native tool which uses rocprofiler-sdk public API
+* Native tool for counter collection will not be used in the following conditions:
+  * --no-native-tool option is provided
+  * ROCm stack on the system is >= 7.0.0
+  * attaching to a process for profiling 
+
 ### Changed
+
+* Default output format for underlying rocprofiler-sdk tool has been changed from csv to rocpd
+  * If rocprofiler-sdk rocpd public library is not available, will fallback to csv format
+
+* Option --rocprofiler-sdk-library-path has been changed to --rocprofiler-tool-library-path to better
+  reflect the fact that we provide flexibility in choosing the path to rocprofiler-sdk tool and not the library
 
 ### Removed
 
 ### Optimized
 
 ### Resolved issues
+
+* Fixed the meaning of --dispatch option in profile mode in argparser to convey the fact that it control which iterations
+  of the kernel to profile and not which dispatch ids to profile.
+* The meaning of --dispatch option in analyze is still the same which is which dispatch ids to analyzer
+* Fix the functioning of --dispatch option to act as 1-based index and ensure that correct kernel iterations are being
+  profiled
 
 ### Known issues
 
