@@ -501,20 +501,18 @@ class RocProfCompute_Base:
                 else:
                     console_debug(output)
 
-            console_log("profiling", f"Current input file: {fname}")
-
         def profile(
-            fnames: list[Path], options: Union[list[str], dict[str, Any]]
+            fnames: Union[list[Path], Path], options: Union[list[str], dict[str, Any]]
         ) -> float:
-            if len(fnames) == 0:
-                console_warning("profile", "No input files found for profiling")
-                return 0.0
-            elif len(fnames) == 1:
-                console_debug("profile", f"Current input file: {fnames[0]}")
-            else:
-                console_debug(
-                    "profile", f"Current input files: {', '.join(map(str, fnames))}"
+            if isinstance(fnames, list):
+                console_log(
+                    "profiling", f"Current input files: {', '.join(map(str, fnames))}"
                 )
+                str_fnames = [str(fname) for fname in fnames]
+            else:
+                console_log("profiling", f"Current input file: {fnames}")
+                str_fnames = str(fnames)
+
             start_time = time.time()
 
             if self.__profiler == "rocprofv3" or self.__profiler == "rocprofiler-sdk":
@@ -533,7 +531,7 @@ class RocProfCompute_Base:
                             f"to adjust or reduce the requested performance metrics!"
                         )
                 run_prof(
-                    fnames=[str(fname) for fname in fnames],
+                    fnames=str_fnames,
                     profiler_options=options,
                     workload_dir=args.path,
                     mspec=self._soc._mspec,
@@ -582,7 +580,7 @@ class RocProfCompute_Base:
                         "pending first measurement...]"
                     )
 
-                duration = profile([fname], options)
+                duration = profile(fname, options)
                 total_profiling_time += duration
 
         # Delete temporary native tool if created
