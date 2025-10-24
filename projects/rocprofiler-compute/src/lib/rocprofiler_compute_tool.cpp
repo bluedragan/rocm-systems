@@ -155,10 +155,18 @@ struct kernel_dispatch_info_t {
 };
 
 // Iteration multiplexing data struct
-struct iteration_multiplexing_data_t {
-  multiplexing_mode_t mode = multiplexing_mode_t::DISABLED;
-  std::map<kernel_dispatch_info_t, std::vector<rocprofiler_counter_config_id_t>> kernel_iteration_map{};
-  std::pair<kernel_dispatch_info_t, rocprofiler_counter_config_id_t> prev_dispatch_config{};
+union iteration_multiplexing_dispatch_record_t {
+  std::vector<rocprofiler_counter_config_id_t>::iterator config;
+  std::map<uint64_t, std::vector<rocprofiler_counter_config_id_t>::iterator> kernel_config;
+  std::map<kernel_dispatch_info_t, std::vector<rocprofiler_counter_config_id_t>::iterator> dispatch_config;
+
+  iteration_multiplexing_dispatch_record_t() {
+    config = {};
+  }
+
+  ~iteration_multiplexing_dispatch_record_t() {
+    // No dynamic memory to free
+  }
 };
 
 // Tool data struct, now includes a vector of counter_info_record_t
@@ -171,7 +179,7 @@ struct tool_data_t {
   std::vector<std::pair<uint64_t, uint64_t>> kernel_filter_ranges{};
   std::vector<counter_info_record_t> counter_records;
   std::set<uint64_t> target_kernel_ids{};
-  iteration_multiplexing_data_t iteration_multiplexing_data{};
+  iteration_multiplexing_mode_t iteration_multiplexing_mode{iteration_multiplexing_mode_t::DISABLED};
 };
 
 using kernel_symbol_data_t =
@@ -180,66 +188,6 @@ using kernel_symbol_data_t =
 rocprofiler_context_id_t &get_client_ctx() {
   static rocprofiler_context_id_t ctx{0};
   return ctx;
-}
-
-void create_counter_config_for_iteration_multiplexing(
-    rocprofiler_dispatch_counting_service_data_t dispatch_data,
-    tool_data_t *tool,
-    const std::vector<rocprofiler_counter_config_id_t>& profiles) {
-  if (tool->iteration_multiplexing_data.mode ==
-      iteration_multiplexing_mode_t::DISABLED) {
-    return;
-  }
-
-  kernel_dispatch_info_t dispatch_info{
-      dispatch_data.dispatch_info.kernel_id,
-      dispatch_data.dispatch_info.queue_id,
-      dispatch_data.dispatch_info.workgroup_size,
-      dispatch_data.dispatch_info.grid_size,
-      dispatch_data.dispatch_info.group_segment_size};
-
-  auto &kernel_map = tool->iteration_multiplexing_data.kernel_iteration_map;
-  if (kernel_map.find(dispatch_info) == kernel_map.end()) {
-    kernel_map[dispatch_info] = profiles;
-  }
-}
-
-rocprofiler_counter_config_id_t get_counter_config(
-    rocprofiler_dispatch_counting_service_data_t dispatch_data,
-    tool_data_t *tool) {
-  if (tool->iteration_multiplexing_data.mode ==
-      iteration_multiplexing_mode_t::DISABLED) {
-    return tool->iteration_multiplexing_data.prev_dispatch_config.second;
-  }
-
-  kernel_dispatch_info_t dispatch_info{
-      dispatch_data.dispatch_info.kernel_id,
-      dispatch_data.dispatch_info.queue_id,
-      dispatch_data.dispatch_info.workgroup_size,
-      dispatch_data.dispatch_info.grid_size,
-      dispatch_data.dispatch_info.group_segment_size};
-
-  auto &kernel_map = tool->iteration_multiplexing_data.kernel_iteration_map;
-  auto it = kernel_map.find(dispatch_info);
-  if (it == kernel_map.end() || it->second.empty()) {
-    throw std::runtime_error("No counter config found for the given dispatch");
-  }
-
-  // Selection of counter config based on multiplexing mode
-  if (tool->iteration_multiplexing_data.mode ==
-      iteration_multiplexing_mode_t::SIMPLE) {
-    
-  }
-  else if (tool->iteration_multiplexing_data.mode ==
-           iteration_multiplexing_mode_t::KERNEL)
-  {
-    
-  }
-  else if (tool->iteration_multiplexing_data.mode ==
-           iteration_multiplexing_mode_t::LAUNCH)
-  {
-    
-  }
 }
 
 void record_callback(rocprofiler_dispatch_counting_service_data_t dispatch_data,
@@ -530,13 +478,57 @@ void dispatch_callback(
   static std::shared_mutex m_mutex = {};
   static std::unordered_map<uint64_t, std::vector<rocprofiler_counter_config_id_t>>
       profile_cache = {};
+  static iteration_multiplexing_dispatch_record_t prev_iteration_multiplexing_dispatch_info;
 
   // check cache for existing profile for this agent
   auto search_cache = [&]() {
     if (auto pos =
             profile_cache.find(dispatch_data.dispatch_info.agent_id.handle);
         pos != profile_cache.end()) {
-      *config = get_counter_config(dispatch_data, tool);
+      if (!pos->second.empty()){
+        // Set next counter config
+        if (tool->iteration_multiplexing_mode ==
+            iteration_multiplexing_mode_t::DISABLED) {
+          *config = pos->second[0];
+        }
+        else if (tool->iteration_multiplexing_mode ==
+                 iteration_multiplexing_mode_t::SIMPLE)
+        {
+          auto next_it = std::next(prev_iteration_multiplexing_dispatch_info.config);
+          prev_iteration_multiplexing_dispatch_info.config = next_it != pos->second.end() ? next_it : pos->second.begin();
+          *config = *prev_iteration_multiplexing_dispatch_info.config;
+        }
+        else if (tool->iteration_multiplexing_mode ==
+                 iteration_multiplexing_mode_t::KERNEL)
+        {
+          if (prev_iteration_multiplexing_dispatch_info.kernel_config.find(kernel_id) ==
+              prev_iteration_multiplexing_dispatch_info.kernel_config.end()) {
+            prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = pos->second.begin();
+          } else{
+            auto next_it = std::next(prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id]);
+            prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = next_it != pos->second.end() ? next_it : pos->second.begin();
+          }
+          *config = *prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id];
+        }
+        else if (tool->iteration_multiplexing_mode ==
+                 iteration_multiplexing_mode_t::LAUNCH)
+        {
+          kernel_dispatch_info_t dispatch_info{
+            dispatch_data.dispatch_info.kernel_id,
+            dispatch_data.dispatch_info.queue_id.handle,
+            dispatch_data.dispatch_info.workgroup_size,
+            dispatch_data.dispatch_info.grid_size,
+            dispatch_data.dispatch_info.group_segment_size};
+          if (prev_iteration_multiplexing_dispatch_info.dispatch_config.find(dispatch_info) ==
+            prev_iteration_multiplexing_dispatch_info.dispatch_config.end()) {
+            prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info] = pos->second.begin();
+          } else {
+            auto next_it = std::next(prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info]);
+          prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info] = next_it != pos->second.end() ? next_it : pos->second.begin();
+          }
+          *config = *prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info];
+        }
+      }
       return true;
     }
     return false;
@@ -646,15 +638,28 @@ void dispatch_callback(
   if (!profiles.empty()){
     profile_cache.emplace(dispatch_data.dispatch_info.agent_id.handle, profiles);
     *config = profiles[0];
-    create_counter_config_for_iteration_multiplexing(dispatch_data, tool, profiles);
-    tool->iteration_multiplexing_data.prev_dispatch_config = 
-        {kernel_dispatch_info_t{
-            dispatch_data.dispatch_info.kernel_id,
-            dispatch_data.dispatch_info.queue_id,
-            dispatch_data.dispatch_info.workgroup_size,
-            dispatch_data.dispatch_info.grid_size,
-            dispatch_data.dispatch_info.group_segment_size},
-         profiles[0]};
+    // Update iteration multiplexing data
+    if (tool->iteration_multiplexing_mode ==
+        iteration_multiplexing_mode_t::SIMPLE) {
+      prev_iteration_multiplexing_dispatch_info.config = profiles.begin();
+    }
+    else if (tool->iteration_multiplexing_mode ==
+             iteration_multiplexing_mode_t::KERNEL)
+    {
+      prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = profiles.begin();
+    }
+    else if (tool->iteration_multiplexing_mode ==
+             iteration_multiplexing_mode_t::LAUNCH)
+    {
+      prev_iteration_multiplexing_dispatch_info.dispatch_config[
+        kernel_dispatch_info_t{
+          dispatch_data.dispatch_info.kernel_id,
+          dispatch_data.dispatch_info.queue_id.handle,
+          dispatch_data.dispatch_info.workgroup_size,
+          dispatch_data.dispatch_info.grid_size,
+          dispatch_data.dispatch_info.group_segment_size}] = 
+        profiles.begin();
+    }
   }
 }
 
@@ -768,7 +773,7 @@ tool_data_t* create_tool_data(rocprofiler_client_id_t* id) {
     tool_data->requested_counters = v;
 
   if (const char *v = getenv("ROCPROF_ITERATION_MULTIPLEXING"))
-    tool_data->iteration_multiplexing_data.mode = [v]() {
+    tool_data->iteration_multiplexing_mode = [v]() {
       std::string mode_str = v;
       if (mode_str == "simple")
         return iteration_multiplexing_mode_t::SIMPLE;
