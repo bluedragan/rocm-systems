@@ -298,6 +298,9 @@ class Flag {
 
     var = os::GetEnvVar("HSA_CO_DMACOPY_SIZE");
     co_dmacopy_size_ = var.empty() ? 1024*1024 : atoi(var.c_str());
+
+    var = os::GetEnvVar("GPU_MAX_HW_QUEUES");
+    cp_queues_limit_ = var.empty() ? 0 : static_cast<uint32_t>(std::stoul(var));
   }
 
   void parse_masks(uint32_t maxGpu, uint32_t maxCU) {
@@ -418,6 +421,8 @@ class Flag {
 
   size_t co_dmacopy_size() const { return co_dmacopy_size_; }
 
+  uint32_t cp_queues_limit() const { return cp_queues_limit_; }
+
   bool dev_mem_queue_buf() const { return dev_mem_queue_buf_; }
 
   uint32_t signal_abort_timeout() const { return signal_abort_timeout_; }
@@ -521,6 +526,8 @@ class Flag {
   size_t pc_sampling_max_device_buffer_size_;
 
   size_t co_dmacopy_size_;
+
+  uint32_t cp_queues_limit_;
 
   // Map GPU index post RVD to its default cu mask.
   std::map<uint32_t, std::vector<uint32_t>> cu_mask_;
