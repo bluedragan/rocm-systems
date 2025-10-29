@@ -80,7 +80,7 @@ union iteration_multiplexing_dispatch_record_t {
   std::map<kernel_dispatch_info_t, std::vector<rocprofiler_counter_config_id_t>::iterator> dispatch_config;
 
   iteration_multiplexing_dispatch_record_t() {
-    config = {};
+    kernel_config = {};
   }
 
   ~iteration_multiplexing_dispatch_record_t() {
@@ -105,3 +105,14 @@ void set_counter_config(
     iteration_multiplexing_dispatch_record_t& dispatch_record,
     rocprofiler_counter_config_id_t *config);
 
+void generate_counter_config(
+    const uint64_t agent_id,
+    std::vector<rocprofiler_counter_config_id_t>& config_list);
+
+void add_counter_config_to_cache(
+    const iteration_multiplexing_mode_t& mode,
+    const uint64_t agent_id,
+    const kernel_dispatch_info_t& dispatch_info,
+    const std::vector<rocprofiler_counter_config_id_t>& config_list,
+    std::unordered_map<uint64_t, std::vector<rocprofiler_counter_config_id_t>>& config_map,
+    iteration_multiplexing_dispatch_record_t& dispatch_record);

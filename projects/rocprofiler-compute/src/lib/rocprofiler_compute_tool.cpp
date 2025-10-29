@@ -438,7 +438,7 @@ void dispatch_callback(
             dispatch_data.dispatch_info.agent_id.handle,
             dispatch_info,
             profile_cache,
-            prev_iteration_multiplexing_dispatch_info))
+            prev_iteration_multiplexing_dispatch_info)){
       set_counter_config(
           tool->iteration_multiplexing_mode,
           dispatch_data.dispatch_info.agent_id.handle,
@@ -446,7 +446,8 @@ void dispatch_callback(
           profile_cache,
           prev_iteration_multiplexing_dispatch_info,
           config);
-    return;
+      return;
+    }
   }
 
   // get write lock to update cache
@@ -562,7 +563,7 @@ void dispatch_callback(
              iteration_multiplexing_mode_t::KERNEL)
     {
       std::clog << "First time for kernel ID: " << kernel_id << std::endl;
-      prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = profiles.begin();
+      prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] =  profiles.begin();
       std::clog << "Set config for kernel ID: " << kernel_id << std::endl;
     }
     else if (tool->iteration_multiplexing_mode ==
@@ -574,8 +575,7 @@ void dispatch_callback(
           dispatch_data.dispatch_info.queue_id.handle,
           dispatch_data.dispatch_info.workgroup_size,
           dispatch_data.dispatch_info.grid_size,
-          dispatch_data.dispatch_info.group_segment_size}] = 
-        profiles.begin();
+          dispatch_data.dispatch_info.group_segment_size}] =  profiles.begin();
     }
   }
 }
@@ -668,7 +668,6 @@ tool_data_t* create_tool_data(rocprofiler_client_id_t* id) {
 
   // Set output stream to file
   auto *ofs = new std::ofstream{filename};
-  sleep(10);  // Delay to allow debugging of file creation issues
   if (!ofs->is_open()) {
     delete ofs;
     throw std::runtime_error("Failed to open output file: " + filename);

@@ -784,6 +784,9 @@ def run_prof(
 
     time_1 = time.time()
 
+    output_path = Path(workload_dir + "/out/pmc_1")
+    output_path.mkdir(parents=True, exist_ok=True)
+
     if rocprof_cmd == "rocprofiler-sdk":
         app_cmd = options.pop("APP_CMD") if "APP_CMD" in options else None
         for key, value in options.items():
