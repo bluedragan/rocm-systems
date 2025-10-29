@@ -44,6 +44,7 @@
 #include "library/tracing.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <timemory/components/timing/wall_clock.hpp>
 #include <timemory/hash/types.hpp>
 #include <timemory/unwind/processed_entry.hpp>
@@ -230,11 +231,11 @@ create_agent_profile(rocprofiler_agent_id_t          agent_id,
             auto dev_id_v = std::stoul(dev_id_s);
 
             ROCPROFSYS_PRINT_F("tool agent device id=%lu, name=%s, device_id=%lu\n",
-                               tool_agent_v->device_id, name_v.c_str(), dev_id_v);
+                               tool_agent_v->device_type_index, name_v.c_str(), dev_id_v);
 
             // skip this counter if the counter is for a specific device id (which
             // doesn't this agent's device id)
-            if(dev_id_v != tool_agent_v->device_id)
+            if(dev_id_v != tool_agent_v->device_type_index)
             {
                 --expected_v;  // is not expected
                 continue;
@@ -250,13 +251,13 @@ create_agent_profile(rocprofiler_agent_id_t          agent_id,
         if(name_v != _old_name_v)
         {
             ROCPROFSYS_PRINT_F("tool agent device id=%lu, old_name=%s, name=%s\n",
-                               tool_agent_v->device_id, _old_name_v.c_str(),
+                               tool_agent_v->device_type_index, _old_name_v.c_str(),
                                name_v.c_str());
         }
         else if(name_v == itr)
         {
             ROCPROFSYS_PRINT_F("tool agent device id=%lu, name=%s\n",
-                               tool_agent_v->device_id, name_v.c_str());
+                               tool_agent_v->device_type_index, name_v.c_str());
         }
 
         // search the gpu agent counter info for a counter with a matching name
@@ -279,9 +280,8 @@ create_agent_profile(rocprofiler_agent_id_t          agent_id,
 
         ROCPROFSYS_ABORT_F(
             "Unable to find all counters for agent %i (gpu-%li, %s) in %s. Found: %s\n",
-            tool_agent_v->agent->node_id, tool_agent_v->device_id,
-            tool_agent_v->agent->name.c_str(), requested_counters.c_str(),
-            found_counters.c_str());
+            tool_agent_v->node_id, tool_agent_v->device_id, tool_agent_v->name.c_str(),
+            requested_counters.c_str(), found_counters.c_str());
     }
 
     if(!counters_v.empty())
@@ -902,8 +902,8 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
                 auto data_v = *static_cast<kernel_symbol_data_t*>(record.payload);
                 tool_data->kernel_symbol_records.wlock(
                     [ts, &record, &data_v](auto& _data) {
-                        _data.emplace_back(
-                            new kernel_symbol_callback_record_t{ ts, record, data_v });
+                        _data[data_v.kernel_id] =
+                            new kernel_symbol_callback_record_t{ ts, record, data_v };
                     });
                 trace_cache::get_metadata_registry().add_kernel_symbol(data_v);
             }
@@ -1552,6 +1552,9 @@ tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
 
 using kernel_dispatch_bundle_t = tim::lightweight_tuple<tim::component::wall_clock>;
 
+static size_t total_time  = 0;
+static size_t total_count = 0;
+
 void
 tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                       rocprofiler_buffer_id_t /*buffer_id*/,
@@ -1577,6 +1580,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
         {
             if(header->kind == ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH)
             {
+                auto  start = std::chrono::steady_clock::now();
                 auto* record =
                     static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(
                         header->payload);
@@ -1584,7 +1588,17 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                 const auto* _kern_sym_data =
                     get_kernel_symbol_info(record->dispatch_info.kernel_id);
 
-                auto        _name     = tim::demangle(_kern_sym_data->kernel_name);
+                std::string _name;
+                if(tool_data->cached_demangle.count(_kern_sym_data->kernel_name) > 0)
+                {
+                    _name = tool_data->cached_demangle.at(_kern_sym_data->kernel_name);
+                }
+                else
+                {
+                    _name = tim::demangle(_kern_sym_data->kernel_name);
+                    tool_data->cached_demangle[_kern_sym_data->kernel_name] = _name;
+                }
+
                 auto        _corr_id  = record->correlation_id.internal;
                 auto        _beg_ns   = record->start_timestamp;
                 auto        _end_ns   = record->end_timestamp;
@@ -1602,8 +1616,9 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                 {
                     cache_category<category::rocm_kernel_dispatch>();
                     cache_add_thread_info(record->thread_id);
-                    cache_add_track(JOIN("", "GPU Kernel Dispatch [", _agent->device_id,
-                                         "] Queue ", _queue_id.handle)
+                    cache_add_track(JOIN("", "GPU Kernel Dispatch [",
+                                         _agent->device_type_index, "] Queue ",
+                                         _queue_id.handle)
                                         .c_str(),
                                     record->thread_id);
                     cache_kernel_dispatch(record, _stream_id);
@@ -1698,6 +1713,13 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                                               _track, _end_ns);
                     }
                 }
+
+                auto end = std::chrono::steady_clock::now();
+
+                total_time +=
+                    std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+                        .count();
+                total_count++;
             }
             else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_COPY)
             {
@@ -2303,6 +2325,9 @@ tool_fini(void* callback_data)
 
     delete tool_data;
     tool_data = nullptr;
+
+    std::cout << "Total time: " << total_time << std::endl;
+    std::cout << "Average time: " << total_time / (double) total_count << std::endl;
 }
 }  // namespace
 
