@@ -84,6 +84,10 @@ for the agent and returns a pointer to it.
 #include <unordered_map>
 #include <vector>
 
+#include <unistd.h>
+
+#include "multiplexing.h"
+
 #define ROCPROFILER_CALL(result, msg)                                          \
   {                                                                            \
     rocprofiler_status_t CHECKSTATUS = result;                                 \
@@ -108,65 +112,6 @@ struct counter_info_record_t {
   uint64_t counter_id;
   std::string counter_name;
   double counter_value;
-};
-
-// Multiplexing modes enum
-enum class iteration_multiplexing_mode_t {
-  DISABLED,
-  SIMPLE,
-  KERNEL,
-  LAUNCH
-};
-
-// Kernel dispatch info struct for iteration multiplexing
-struct kernel_dispatch_info_t {
-  uint64_t kernel_id;
-  uint64_t queue_id;
-  rocprofiler_dim3_t workgroup_size;
-  rocprofiler_dim3_t grid_size;
-  uint32_t LDS_memory_size;
-
-  // Overload operator< for strict weak ordering
-  bool operator<(const kernel_dispatch_info_t other) const {
-    // Compare based on kernel_id first, then queue_id, then workgroup_size,
-    // then grid_size, and finally LDS_memory_size
-    return std::tie(
-      kernel_id,
-      queue_id,
-      workgroup_size.x,
-      workgroup_size.y,
-      workgroup_size.z,
-      grid_size.x,
-      grid_size.y,
-      grid_size.z,
-      LDS_memory_size
-    ) < std::tie(
-      other.kernel_id,
-      other.queue_id,
-      other.workgroup_size.x,
-      other.workgroup_size.y,
-      other.workgroup_size.z,
-      other.grid_size.x, 
-      other.grid_size.y,
-      other.grid_size.z,
-      other.LDS_memory_size
-    );
-  }
-};
-
-// Iteration multiplexing data struct
-union iteration_multiplexing_dispatch_record_t {
-  std::vector<rocprofiler_counter_config_id_t>::iterator config;
-  std::map<uint64_t, std::vector<rocprofiler_counter_config_id_t>::iterator> kernel_config;
-  std::map<kernel_dispatch_info_t, std::vector<rocprofiler_counter_config_id_t>::iterator> dispatch_config;
-
-  iteration_multiplexing_dispatch_record_t() {
-    config = {};
-  }
-
-  ~iteration_multiplexing_dispatch_record_t() {
-    // No dynamic memory to free
-  }
 };
 
 // Tool data struct, now includes a vector of counter_info_record_t
@@ -479,69 +424,39 @@ void dispatch_callback(
   static std::unordered_map<uint64_t, std::vector<rocprofiler_counter_config_id_t>>
       profile_cache = {};
   static iteration_multiplexing_dispatch_record_t prev_iteration_multiplexing_dispatch_info;
+  auto dispatch_info = kernel_dispatch_info_t{
+      dispatch_data.dispatch_info.kernel_id,
+      dispatch_data.dispatch_info.queue_id.handle,
+      dispatch_data.dispatch_info.workgroup_size,
+      dispatch_data.dispatch_info.grid_size,
+      dispatch_data.dispatch_info.group_segment_size};
 
-  // check cache for existing profile for this agent
-  auto search_cache = [&]() {
-    if (auto pos =
-            profile_cache.find(dispatch_data.dispatch_info.agent_id.handle);
-        pos != profile_cache.end()) {
-      if (!pos->second.empty()){
-        // Set next counter config
-        if (tool->iteration_multiplexing_mode ==
-            iteration_multiplexing_mode_t::DISABLED) {
-          *config = pos->second[0];
-        }
-        else if (tool->iteration_multiplexing_mode ==
-                 iteration_multiplexing_mode_t::SIMPLE)
-        {
-          auto next_it = std::next(prev_iteration_multiplexing_dispatch_info.config);
-          prev_iteration_multiplexing_dispatch_info.config = next_it != pos->second.end() ? next_it : pos->second.begin();
-          *config = *prev_iteration_multiplexing_dispatch_info.config;
-        }
-        else if (tool->iteration_multiplexing_mode ==
-                 iteration_multiplexing_mode_t::KERNEL)
-        {
-          if (prev_iteration_multiplexing_dispatch_info.kernel_config.find(kernel_id) ==
-              prev_iteration_multiplexing_dispatch_info.kernel_config.end()) {
-            prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = pos->second.begin();
-          } else{
-            auto next_it = std::next(prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id]);
-            prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = next_it != pos->second.end() ? next_it : pos->second.begin();
-          }
-          *config = *prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id];
-        }
-        else if (tool->iteration_multiplexing_mode ==
-                 iteration_multiplexing_mode_t::LAUNCH)
-        {
-          kernel_dispatch_info_t dispatch_info{
-            dispatch_data.dispatch_info.kernel_id,
-            dispatch_data.dispatch_info.queue_id.handle,
-            dispatch_data.dispatch_info.workgroup_size,
-            dispatch_data.dispatch_info.grid_size,
-            dispatch_data.dispatch_info.group_segment_size};
-          if (prev_iteration_multiplexing_dispatch_info.dispatch_config.find(dispatch_info) ==
-            prev_iteration_multiplexing_dispatch_info.dispatch_config.end()) {
-            prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info] = pos->second.begin();
-          } else {
-            auto next_it = std::next(prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info]);
-          prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info] = next_it != pos->second.end() ? next_it : pos->second.begin();
-          }
-          *config = *prev_iteration_multiplexing_dispatch_info.dispatch_config[dispatch_info];
-        }
-      }
-      return true;
-    }
-    return false;
-  };
   {
     auto rlock = std::shared_lock{m_mutex};
-    if (search_cache())
-      return;
+    if (search_counter_config_cache(
+            tool->iteration_multiplexing_mode,
+            dispatch_data.dispatch_info.agent_id.handle,
+            dispatch_info,
+            profile_cache,
+            prev_iteration_multiplexing_dispatch_info))
+      set_counter_config(
+          tool->iteration_multiplexing_mode,
+          dispatch_data.dispatch_info.agent_id.handle,
+          dispatch_info,
+          profile_cache,
+          prev_iteration_multiplexing_dispatch_info,
+          config);
+    return;
   }
 
   // get write lock to update cache
   auto wlock = std::unique_lock{m_mutex};
-  if (search_cache())
+  if (search_counter_config_cache(
+            tool->iteration_multiplexing_mode,
+            dispatch_data.dispatch_info.agent_id.handle,
+            dispatch_info,
+            profile_cache,
+            prev_iteration_multiplexing_dispatch_info))
     return;
 
   // get counters to collect
@@ -646,7 +561,9 @@ void dispatch_callback(
     else if (tool->iteration_multiplexing_mode ==
              iteration_multiplexing_mode_t::KERNEL)
     {
+      std::clog << "First time for kernel ID: " << kernel_id << std::endl;
       prev_iteration_multiplexing_dispatch_info.kernel_config[kernel_id] = profiles.begin();
+      std::clog << "Set config for kernel ID: " << kernel_id << std::endl;
     }
     else if (tool->iteration_multiplexing_mode ==
              iteration_multiplexing_mode_t::LAUNCH)
@@ -751,6 +668,7 @@ tool_data_t* create_tool_data(rocprofiler_client_id_t* id) {
 
   // Set output stream to file
   auto *ofs = new std::ofstream{filename};
+  sleep(10);  // Delay to allow debugging of file creation issues
   if (!ofs->is_open()) {
     delete ofs;
     throw std::runtime_error("Failed to open output file: " + filename);
@@ -773,17 +691,7 @@ tool_data_t* create_tool_data(rocprofiler_client_id_t* id) {
     tool_data->requested_counters = v;
 
   if (const char *v = getenv("ROCPROF_ITERATION_MULTIPLEXING"))
-    tool_data->iteration_multiplexing_mode = [v]() {
-      std::string mode_str = v;
-      if (mode_str == "simple")
-        return iteration_multiplexing_mode_t::SIMPLE;
-      else if (mode_str == "kernel")
-        return iteration_multiplexing_mode_t::KERNEL;
-      else if (mode_str == "launch")
-        return iteration_multiplexing_mode_t::LAUNCH;
-      else
-        return iteration_multiplexing_mode_t::DISABLED;
-    }();
+    tool_data->iteration_multiplexing_mode = iteration_multiplexing_mode(v);
 
   // ROCPROF_KERNEL_FILTER_INCLUDE_REGEX env. var. is a regex string like
   // kernel_name_1|kernel_name_2|... Used to collect counters only for kernels
