@@ -134,10 +134,9 @@ struct client_data
     using buffer_name_info_t   = rocprofiler::sdk::buffer_name_info_t<std::string_view>;
     using callback_name_info_t = rocprofiler::sdk::callback_name_info_t<std::string_view>;
     using kernel_symbol_map_t  = std::map<uint64_t, kernel_symbol_callback_record_t*>;
-    using code_object_vec_t    = std::vector<code_object_callback_record_t>;
+    using code_object_map_t    = std::map<uint64_t, code_object_callback_record_t>;
     using buffer_id_vec_t      = std::array<rocprofiler_buffer_id_t, num_buffers>;
     using context_id_vec_t     = std::array<rocprofiler_context_id_t, num_contexts>;
-    using agent_vec_t          = std::vector<rocprofiler_agent_v0_t>;
 
     rocprofiler_client_id_t*                     client_id                 = nullptr;
     rocprofiler_client_finalize_t                client_fini               = nullptr;
@@ -153,7 +152,7 @@ struct client_data
     agent_counter_id_map_t                       agent_events              = {};
     agent_counter_info_map_t                     agent_counter_info        = {};
     agent_counter_profile_map_t                  agent_counter_profiles    = {};
-    common::synchronized<code_object_vec_t>      code_object_records       = {};
+    common::synchronized<code_object_map_t>      code_object_records       = {};
     common::synchronized<kernel_symbol_map_t>    kernel_symbol_records     = {};
     buffer_name_info_t                           buffered_tracing_info     = {};
     callback_name_info_t                         callback_tracing_info     = {};
@@ -211,11 +210,13 @@ client_data::get_kernel_symbol_info(uint64_t _kernel_id) const
 {
     return kernel_symbol_records.rlock(
         [_kernel_id](const kernel_symbol_map_t& _data) -> const kernel_symbol_data_t* {
-            if(_data.count(_kernel_id) > 0)
+            const auto result = _data.find(_kernel_id);
+            if(result == _data.end())
             {
-                return &_data.at(_kernel_id)->payload;
+                return nullptr;
             }
-            return nullptr;
+            const auto [_, kernel_symbol] = *result;
+            return &kernel_symbol->payload;
         });
 }
 
@@ -234,17 +235,15 @@ inline const rocprofiler_callback_tracing_code_object_load_data_t*
 client_data::get_code_object_info(uint64_t code_object_id) const
 {
     return code_object_records.rlock(
-        [code_object_id](const auto& _data)
+        [code_object_id](const code_object_map_t& _data)
             -> const rocprofiler_callback_tracing_code_object_load_data_t* {
-            for(const auto& itr : _data)
+            const auto it = _data.find(code_object_id);
+            if(it == _data.end())
             {
-                if(code_object_id == itr.payload.code_object_id)
-                {
-                    return &itr.payload;
-                    break;
-                }
+                return nullptr;
             }
-            return nullptr;
+            const auto [_, callback_record] = *it;
+            return &callback_record.payload;
         });
 }
 

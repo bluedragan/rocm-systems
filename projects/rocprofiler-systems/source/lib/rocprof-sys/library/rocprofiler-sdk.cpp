@@ -891,8 +891,8 @@ tool_code_object_callback(rocprofiler_callback_tracing_record_t record,
                     *static_cast<rocprofiler_callback_tracing_code_object_load_data_t*>(
                         record.payload);
                 tool_data->code_object_records.wlock([ts, &record, &data_v](auto& _data) {
-                    _data.emplace_back(
-                        code_object_callback_record_t{ ts, record, data_v });
+                    _data[data_v.code_object_id] =
+                        code_object_callback_record_t{ ts, record, data_v };
                 });
                 trace_cache::get_metadata_registry().add_code_object(data_v);
             }
@@ -1572,6 +1572,9 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
     static auto _mtx = std::mutex{};
     auto        _lk  = std::unique_lock<std::mutex>{ _mtx };
 
+    // std::cout << "Buffered tracing started: " << num_headers
+    //           << " count, ts: " << rocprofsys::comp::wall_clock::record() << std::endl;
+
     for(size_t i = 0; i < num_headers; ++i)
     {
         auto* header = headers[i];
@@ -1580,7 +1583,6 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
         {
             if(header->kind == ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH)
             {
-                auto  start = std::chrono::steady_clock::now();
                 auto* record =
                     static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(
                         header->payload);
@@ -1713,13 +1715,6 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                                               _track, _end_ns);
                     }
                 }
-
-                auto end = std::chrono::steady_clock::now();
-
-                total_time +=
-                    std::chrono::duration_cast<std::chrono::microseconds>(end - start)
-                        .count();
-                total_count++;
             }
             else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_COPY)
             {
@@ -1862,6 +1857,9 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                              header->category, header->kind);
         }
     }
+
+    // std::cout << "Buffered tracing ended: " << num_headers
+    //           << " count, ts: " << rocprofsys::comp::wall_clock::record() << std::endl;
 }
 
 auto&
