@@ -551,7 +551,7 @@ cache_region(const rocprofiler_callback_tracing_record_t* record,
 }
 
 void
-cache_kernel_dispatch(rocprofiler_buffer_tracing_kernel_dispatch_record_t* record, uint64_t stream_handle)
+cache_kernel_dispatch(const rocprofiler_buffer_tracing_kernel_dispatch_record_t* record, uint64_t stream_handle)
 {
     auto queue_handle  = record->dispatch_info.queue_id.handle;
 
@@ -1684,35 +1684,34 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
                     if(_group_by_queue)
                     {
+                        auto _category = category::rocm_kernel_dispatch{};
+
                         auto _track_desc = [](int32_t _device_id_v, int64_t _queue_id_v) {
                             return JOIN("", "GPU Kernel Dispatch [", _device_id_v,
                                         "] Queue ", _queue_id_v);
                         };
 
                         const auto _track = tracing::get_perfetto_track(
-                            category::rocm_kernel_dispatch{}, _track_desc,
-                            _agent->device_id, _queue_id.handle);
+                            _category, _track_desc, _agent->device_id, _queue_id.handle);
 
-                        tracing::push_perfetto(category::rocm_kernel_dispatch{},
-                                               _name.c_str(), _track, _beg_ns,
+                        tracing::push_perfetto(_category, _name.c_str(), _track, _beg_ns,
                                                ::perfetto::Flow::ProcessScoped(_corr_id),
                                                add_perfetto_annotations);
 
-                        tracing::pop_perfetto(category::rocm_kernel_dispatch{},
-                                              _name.c_str(), _track, _end_ns);
+                        tracing::pop_perfetto(_category, _name.c_str(), _track, _end_ns);
                     }
                     else
                     {
-                        const auto _track = tracing::get_perfetto_track(
-                            category::rocm_hip_stream{}, _track_desc_stream, _stream_id);
+                        auto _category = category::rocm_hip_stream{};
 
-                        tracing::push_perfetto(category::rocm_hip_stream{}, _name.c_str(),
-                                               _track, _beg_ns,
+                        const auto _track = tracing::get_perfetto_track(
+                            _category, _track_desc_stream, _stream_id);
+
+                        tracing::push_perfetto(_category, _name.c_str(), _track, _beg_ns,
                                                ::perfetto::Flow::ProcessScoped(_corr_id),
                                                add_perfetto_annotations);
 
-                        tracing::pop_perfetto(category::rocm_hip_stream{}, _name.c_str(),
-                                              _track, _end_ns);
+                        tracing::pop_perfetto(_category, _name.c_str(), _track, _end_ns);
                     }
                 }
             }
@@ -1860,6 +1859,208 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
     // std::cout << "Buffered tracing ended: " << num_headers
     //           << " count, ts: " << rocprofsys::comp::wall_clock::record() << std::endl;
+}
+
+void
+tool_tracing_buffered_kernel_dispatch(rocprofiler_context_id_t /*context*/,
+                                      rocprofiler_buffer_id_t /*buffer_id*/,
+                                      rocprofiler_record_header_t** headers,
+                                      size_t num_headers, void* /*user_data*/,
+                                      uint64_t /*drop_count*/)
+{
+    if(num_headers == 0 || headers == nullptr) return;
+
+    const auto _track_desc_stream = [](uint64_t _stream_id) {
+        return JOIN("", "HIP Activity Stream ", _stream_id);
+    };
+
+    const auto _track_desc_queue = [](int32_t _device_id_v, int64_t _queue_id_v) {
+        return JOIN("", "GPU Kernel Dispatch [", _device_id_v, "] Queue ", _queue_id_v);
+    };
+
+    const auto _stream_category = category::rocm_hip_stream{};
+    const auto _queue_category  = category::rocm_kernel_dispatch{};
+
+    bool       _group_by_queue   = get_group_by_queue();
+    const bool _get_use_timemory = get_use_timemory();
+    const bool _get_use_perfetto = get_use_perfetto();
+
+    static auto _mtx = std::mutex{};
+    auto        _lk  = std::unique_lock<std::mutex>{ _mtx };
+
+    std::cout << "Buffered tracing started: " << num_headers
+              << " count, ts: " << rocprofsys::comp::wall_clock::record() << std::endl;
+
+    size_t first_section_time  = 0;
+    size_t second_section_time = 0;
+    size_t third_section_time  = 0;
+    size_t fourth_section_time = 0;
+
+    std::for_each(
+        headers, headers + num_headers, [&](const rocprofiler_record_header_t* header) {
+            if(ROCPROFSYS_UNLIKELY(header->category !=
+                                   ROCPROFILER_BUFFER_CATEGORY_TRACING))
+            {
+                return;
+            }
+
+            const auto first_start = rocprofsys::comp::wall_clock::record();
+
+            auto* record =
+                static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(
+                    header->payload);
+
+            const auto* _kern_sym_data =
+                get_kernel_symbol_info(record->dispatch_info.kernel_id);
+
+            std::string _name;
+            const auto  it = tool_data->cached_demangle.find(_kern_sym_data->kernel_name);
+            if(it != tool_data->cached_demangle.cend())
+            {
+                _name = it->second;
+            }
+            else
+            {
+                _name = tim::demangle(_kern_sym_data->kernel_name);
+                tool_data->cached_demangle[_kern_sym_data->kernel_name] = _name;
+            }
+
+            const auto  _corr_id  = record->correlation_id.internal;
+            const auto  _beg_ns   = record->start_timestamp;
+            const auto  _end_ns   = record->end_timestamp;
+            const auto  _agent_id = record->dispatch_info.agent_id;
+            const auto  _queue_id = record->dispatch_info.queue_id;
+            const auto* _agent    = tool_data->get_gpu_tool_agent(_agent_id);
+
+            const uint64_t _stream_id = get_stream_id(record).handle;
+            if(_stream_id == 0)
+            {
+                // kernel_dispatch is not associated with a HIP stream
+                _group_by_queue = true;
+            }
+
+            first_section_time += (rocprofsys::comp::wall_clock::record() - first_start);
+
+            const auto second_start = rocprofsys::comp::wall_clock::record();
+
+            {
+                cache_category<category::rocm_kernel_dispatch>();
+                cache_add_thread_info(record->thread_id);
+                cache_add_track(JOIN("", "GPU Kernel Dispatch [",
+                                     _agent->device_type_index, "] Queue ",
+                                     _queue_id.handle)
+                                    .c_str(),
+                                record->thread_id);
+                cache_kernel_dispatch(record, _stream_id);
+            }
+
+            second_section_time +=
+                (rocprofsys::comp::wall_clock::record() - second_start);
+            const auto third_start = rocprofsys::comp::wall_clock::record();
+
+            if(_get_use_timemory)
+            {
+                const auto& _tinfo = thread_info::get(record->thread_id, SystemTID);
+                auto        _tid   = _tinfo->index_data->sequent_value;
+
+                auto _bundle = kernel_dispatch_bundle_t{ _name };
+
+                _bundle.push(_tid).start().stop();
+                _bundle.get([_beg_ns, _end_ns](tim::component::wall_clock* _wc) {
+                    auto value = _end_ns - _beg_ns;
+                    _wc->set_value(value);
+                    _wc->set_accum(value);
+                });
+                _bundle.pop();
+            }
+
+            third_section_time += (rocprofsys::comp::wall_clock::record() - third_start);
+            const auto fourth_start = rocprofsys::comp::wall_clock::record();
+
+            if(_get_use_perfetto)
+            {
+                // Lambda to add common perfetto annotations for kernel dispatch
+                auto add_perfetto_annotations = [&](::perfetto::EventContext ctx) {
+                    if(config::get_perfetto_annotations())
+                    {
+                        tracing::add_perfetto_annotation(ctx, "begin_ns", _beg_ns);
+                        tracing::add_perfetto_annotation(ctx, "end_ns", _end_ns);
+                        tracing::add_perfetto_annotation(ctx, "corr_id", _corr_id);
+                        tracing::add_perfetto_annotation(ctx, "stream_id", _stream_id);
+
+                        tracing::add_perfetto_annotation(ctx, "queue", _queue_id.handle);
+                        tracing::add_perfetto_annotation(
+                            ctx, "dispatch_id", record->dispatch_info.dispatch_id);
+                        tracing::add_perfetto_annotation(ctx, "kernel_id",
+                                                         record->dispatch_info.kernel_id);
+                        tracing::add_perfetto_annotation(
+                            ctx, "private_segment_size",
+                            record->dispatch_info.private_segment_size);
+                        tracing::add_perfetto_annotation(
+                            ctx, "group_segment_size",
+                            record->dispatch_info.group_segment_size);
+                        tracing::add_perfetto_annotation(
+                            ctx, "workgroup_size",
+                            JOIN("", "(",
+                                 JOIN(',', record->dispatch_info.workgroup_size.x,
+                                      record->dispatch_info.workgroup_size.y,
+                                      record->dispatch_info.workgroup_size.z),
+                                 ")"));
+                        tracing::add_perfetto_annotation(
+                            ctx, "grid_size",
+                            JOIN("", "(",
+                                 JOIN(',', record->dispatch_info.grid_size.x,
+                                      record->dispatch_info.grid_size.y,
+                                      record->dispatch_info.grid_size.z),
+                                 ")"));
+                    }
+                };
+
+                if(_group_by_queue)
+                {
+                    const auto* _category = &_queue_category;
+
+                    const auto _track = tracing::get_perfetto_track(
+                        *_category, _track_desc_queue, _agent->device_type_index,
+                        _queue_id.handle);
+
+                    tracing::push_perfetto(*_category, _name.c_str(), _track, _beg_ns,
+                                           ::perfetto::Flow::ProcessScoped(_corr_id),
+                                           add_perfetto_annotations);
+
+                    tracing::pop_perfetto(*_category, _name.c_str(), _track, _end_ns);
+                }
+                else
+                {
+                    const auto* _category = &_stream_category;
+
+                    const auto _track = tracing::get_perfetto_track(
+                        *_category, _track_desc_stream, _stream_id);
+
+                    tracing::push_perfetto(*_category, _name.c_str(), _track, _beg_ns,
+                                           ::perfetto::Flow::ProcessScoped(_corr_id),
+                                           add_perfetto_annotations);
+
+                    tracing::pop_perfetto(*_category, _name.c_str(), _track, _end_ns);
+                }
+            }
+
+            fourth_section_time +=
+                (rocprofsys::comp::wall_clock::record() - fourth_start);
+        });
+
+    std::cout << "Buffered tracing ended: " << num_headers
+              << " count, ts: " << rocprofsys::comp::wall_clock::record() << "\n";
+
+    std::cout << "First section time " << first_section_time
+              << " ns avg: " << first_section_time / (double) num_headers << " ns\n";
+    std::cout << "Second section time " << second_section_time
+              << " ns avg: " << second_section_time / (double) num_headers << " ns\n";
+    std::cout << "Third section time " << third_section_time
+              << " ns avg: " << third_section_time / (double) num_headers << " ns\n";
+    std::cout << "Fourth section time " << fourth_section_time
+              << " ns avg: " << fourth_section_time / (double) num_headers << " ns"
+              << std::endl;
 }
 
 auto&
@@ -2175,8 +2376,8 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* user_data)
     {
         ROCPROFILER_CALL(rocprofiler_create_buffer(
             _data->primary_ctx, buffer_size, watermark,
-            ROCPROFILER_BUFFER_POLICY_LOSSLESS, tool_tracing_buffered, tool_data,
-            &_data->kernel_dispatch_buffer));
+            ROCPROFILER_BUFFER_POLICY_LOSSLESS, tool_tracing_buffered_kernel_dispatch,
+            tool_data, &_data->kernel_dispatch_buffer));
 
         ROCPROFILER_CALL(rocprofiler_configure_buffer_tracing_service(
             _data->primary_ctx, ROCPROFILER_BUFFER_TRACING_KERNEL_DISPATCH, nullptr, 0,
