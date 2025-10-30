@@ -41,6 +41,13 @@ find_program (GIT NAMES git)
 
 # sets DRM_INCLUDE_DIRS
 pkg_check_modules(DRM REQUIRED libdrm)
+if(NOT DRM_FOUND)
+  if(EXISTS "/etc/debian_version")
+    message(FATAL_ERROR "libdrm not found. Please install libdrm, libdrm-dev or libdrm-amdgpu-dev package.")
+  else()
+    message(FATAL_ERROR "libdrm not found. Please install libdrm, libdrm-devel or libdrm-amdgpu-devel package.")
+  endif()
+endif()
 
 ## Setup the package version based on git tags.
 set(PKG_VERSION_GIT_TAG_PREFIX "rsmi_pkg_ver")
@@ -317,7 +324,7 @@ else()
    set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 endif()
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "sudo, libdrm-dev, libdrm-amdgpu-dev")
-set(CPACK_RPM_PACKAGE_SUGGESTS "sudo, libdrm-dev, libdrm-amdgpu-dev")
+set(CPACK_RPM_PACKAGE_SUGGESTS "sudo, libdrm-devel, libdrm-amdgpu-devel")
 
 ## Process the Debian install/remove scripts to update the CPACK variables
 configure_file(
