@@ -300,7 +300,7 @@ class Flag {
     co_dmacopy_size_ = var.empty() ? 1024*1024 : atoi(var.c_str());
 
     var = os::GetEnvVar("GPU_MAX_HW_QUEUES");
-    cp_queues_limit_ = var.empty() ? 0 : static_cast<uint32_t>(std::stoul(var));
+    cp_queues_limit_ = var.empty() ? 0 : atoi(var.c_str());
   }
 
   void parse_masks(uint32_t maxGpu, uint32_t maxCU) {
