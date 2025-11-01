@@ -40,8 +40,7 @@ namespace rocattach
 {
 namespace
 {
-
-constexpr char ROCATTACH_LIBRARY_NAME[] = "librocprofiler-sdk-rocattach.so.1";
+constexpr char ROCATTACH_LIBRARY_NAME[]                       = "librocprofiler-sdk-rocattach.so.1";
 std::unordered_map<std::string, void*> m_target_library_addrs = {};
 std::unordered_map<std::string, void*> m_target_symbol_addrs  = {};
 
@@ -81,10 +80,9 @@ get_linked_path(std::string_view _name, open_modes_vec_t&& _open_modes)
 auto
 get_this_library_path()
 {
-    auto _this_lib_path =
-        get_linked_path(ROCATTACH_LIBRARY_NAME, {RTLD_NOLOAD | RTLD_LAZY});
-    LOG_IF(FATAL, !_this_lib_path) << ROCATTACH_LIBRARY_NAME
-                                   << " could not locate itself in the list of loaded libraries";
+    auto _this_lib_path = get_linked_path(ROCATTACH_LIBRARY_NAME, {RTLD_NOLOAD | RTLD_LAZY});
+    LOG_IF(FATAL, !_this_lib_path)
+        << ROCATTACH_LIBRARY_NAME << " could not locate itself in the list of loaded libraries";
     return fs::path{*_this_lib_path}.parent_path().string();
 }
 

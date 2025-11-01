@@ -459,8 +459,9 @@ PTraceSession::wait_for_breakpoint()
     if(!m_ptrace_signal_handler_state.compare_exchange_strong(
            expected_state, PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT))
     {
-        ROCP_ERROR
-            << "signal handler thread was in an unexpected state when waiting for stop. State code: " << expected_state;
+        ROCP_ERROR << "signal handler thread was in an unexpected state when waiting for stop. "
+                      "State code: "
+                   << expected_state;
         return ROCATTACH_STATUS_ERROR;
     }
     ROCATTACH_CALL(cont());
@@ -471,8 +472,7 @@ PTraceSession::wait_for_breakpoint()
     }
     if(m_ptrace_signal_handler_state.load() != PTRACE_SIGNAL_HANDLER_STATE_ATTACHED)
     {
-        ROCP_ERROR
-            << "signal handler thread was in an unexpected state after waiting for stop";
+        ROCP_ERROR << "signal handler thread was in an unexpected state after waiting for stop";
         return m_ptrace_signal_handler_error.load();
     }
     // manually set state to stopped
@@ -490,8 +490,9 @@ PTraceSession::wait_for_stop()
     if(!m_ptrace_signal_handler_state.compare_exchange_strong(
            expected_state, PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT))
     {
-        ROCP_ERROR
-            << "signal handler thread was in an unexpected state when waiting for breakpoint. State code: " << expected_state;
+        ROCP_ERROR << "signal handler thread was in an unexpected state when waiting for "
+                      "breakpoint. State code: "
+                   << expected_state;
         return ROCATTACH_STATUS_ERROR;
     }
     PTRACE_CALL(PTRACE_INTERRUPT, m_pid, NULL, NULL);
@@ -503,7 +504,8 @@ PTraceSession::wait_for_stop()
     if(m_ptrace_signal_handler_state.load() != PTRACE_SIGNAL_HANDLER_STATE_ATTACHED)
     {
         ROCP_ERROR
-            << "signal handler thread was in an unexpected state after waiting for breakpoint " << m_ptrace_signal_handler_state.load();
+            << "signal handler thread was in an unexpected state after waiting for breakpoint "
+            << m_ptrace_signal_handler_state.load();
         return m_ptrace_signal_handler_error.load();
     }
     m_state = PTRACE_SESSION_STATE_STOPPED;

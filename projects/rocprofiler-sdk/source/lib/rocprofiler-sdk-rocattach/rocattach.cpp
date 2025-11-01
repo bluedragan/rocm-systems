@@ -245,12 +245,12 @@ teardown(int pid)
 
     uint64_t retval = 0;
     // Execute the attach function with both parameters
-    status = session.call_function("librocprofiler-register.so",
-                                   "rocprofiler_register_detach",
-                                   retval);
+    status =
+        session.call_function("librocprofiler-register.so", "rocprofiler_register_detach", retval);
     if(status != ROCATTACH_STATUS_SUCCESS)
     {
-        ROCP_ERROR << "Failed to call detach function in target process " << pid << ". Status code: " << status;
+        ROCP_ERROR << "Failed to call detach function in target process " << pid
+                   << ". Status code: " << status;
         // continue to detach anyways
     }
     else if(retval != 0)
