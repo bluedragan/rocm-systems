@@ -333,7 +333,6 @@ PTraceSession::ptrace_signal_handler_func(
     }
     _error.store(ROCATTACH_STATUS_SUCCESS);
     _state.store(PTRACE_SIGNAL_HANDLER_STATE_FINAL);
-    return;
 }
 
 rocattach_status_t

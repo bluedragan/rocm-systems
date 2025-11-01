@@ -35,8 +35,6 @@
 
 extern char** environ;
 
-namespace common = ::rocprofiler::common;
-
 namespace rocprofiler
 {
 namespace rocattach
@@ -138,7 +136,7 @@ setup(int pid)
     // Setup attachement for rocprofiler
     ROCP_TRACE << "Attachment library attach function called for pid " << pid;
 
-    auto sessions = CHECK_NOTNULL(get_sessions());
+    auto* sessions = CHECK_NOTNULL(get_sessions());
 
     if(sessions->count(pid) > 0)
     {
@@ -231,7 +229,7 @@ teardown(int pid)
     // Setup attachement for rocprofiler
     ROCP_TRACE << "Attachment library detach function called for pid " << pid;
 
-    auto sessions = CHECK_NOTNULL(get_sessions());
+    auto* sessions = CHECK_NOTNULL(get_sessions());
 
     if(sessions->count(pid) == 0)
     {
@@ -303,10 +301,10 @@ detach(int pid)
     }
     else
     {
-        for(auto& myPair : *(CHECK_NOTNULL(rocprofiler::rocattach::get_sessions())))
+        for(auto& pair_itr : *(CHECK_NOTNULL(rocprofiler::rocattach::get_sessions())))
         {
-            int pid = myPair.first;
-            rocprofiler::rocattach::teardown(pid);
+            int pid_itr = pair_itr.first;
+            rocprofiler::rocattach::teardown(pid_itr);
         }
         return ROCATTACH_STATUS_SUCCESS;
     }
