@@ -81,6 +81,7 @@
 #include "suites/functional/cu_masking.h"
 #include "amd_smi/amdsmi.h"
 #include "common/common.h"
+#include "suites/functional/counted_queues.h"
 
 static RocrTstGlobals *sRocrtstGlvalues = nullptr;
 
@@ -478,6 +479,34 @@ TEST(rocrtstFunc, VirtMemory_Interprocess_Test) {
     RunCustomTestProlog(&vmt);
     RunCustomTestEpilog(&vmt);
   );
+}
+
+TEST(rocrtstFunc, Counted_Queue_Basic_Test) {
+  CountedQueuesTest cq;
+  RunCustomTestProlog(&cq);
+  cq.CountedQueueBasicApiTest();
+  RunCustomTestEpilog(&cq);
+}
+
+TEST(rocrtstFunc, Counted_Queue_Same_Priority_Max_Limit_Test) {
+  CountedQueuesTest cq;
+  RunCustomTestProlog(&cq);
+  cq.CountedQueues_SamePriority_MaxLimitTest();
+  RunCustomTestEpilog(&cq);
+}
+
+TEST(rocrtstFunc, Counted_Queue_Invalid_Args_Test) {
+  CountedQueuesTest cq;
+  RunCustomTestProlog(&cq);
+  cq.InvalidArgsTest();
+  RunCustomTestEpilog(&cq);
+}
+
+TEST(rocrtstFunc, Counted_Queue_Multiple_Priorities_Limit_Test) {
+  CountedQueuesTest cq;
+  RunCustomTestProlog(&cq);
+  cq.CountedQueuesAllPrioritiesLimitTest();
+  RunCustomTestEpilog(&cq);
 }
 
 TEST(rocrtstNeg, Memory_Negative_Tests) {
