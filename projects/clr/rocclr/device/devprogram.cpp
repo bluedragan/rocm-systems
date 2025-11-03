@@ -46,6 +46,10 @@
 
 namespace amd::device {
 
+using ComgrDataSetUniqueHandle = amd::ComgrDataSetUniqueHandle;
+using ComgrActionInfoUniqueHandle = amd::ComgrActionInfoUniqueHandle;
+using ComgrDataUniqueHandle = amd::ComgrDataUniqueHandle;
+
 inline static std::vector<std::string> splitSpaceSeparatedString(const char* str) {
   std::string s(str);
   std::stringstream ss(s);
@@ -269,30 +273,29 @@ bool Program::linkLLVMBitcode(const amd_comgr_data_set_t inputs,
     return false;
   }
 
+  size_t bcCount = 0;
   //  Create the action for linking
-  amd_comgr_action_info_t action;
-  bool hasAction = false;
-
-  amd_comgr_status_t status = createAction(langver, options, &action, &hasAction);
-
-  if (status == AMD_COMGR_STATUS_SUCCESS) {
-    status = amd::Comgr::do_action(AMD_COMGR_ACTION_LINK_BC_TO_BC, action, inputs, *output);
-    extractBuildLog(*output);
+  ComgrActionInfoUniqueHandle action;
+  if (action.Create() != AMD_COMGR_STATUS_SUCCESS) {
+    return false;
+  }
+  auto res = amd::Comgr::action_data_count(inputs, AMD_COMGR_DATA_KIND_BC, &bcCount);
+  if (res != AMD_COMGR_STATUS_SUCCESS || bcCount > 0) {
+    return false;
   }
 
-  if (status == AMD_COMGR_STATUS_SUCCESS) {
-    std::string dumpFileName;
-    if (amdOptions->isDumpFlagSet(amd::option::DUMP_BC_LINKED)) {
-      dumpFileName = amdOptions->getDumpFileName("_linked.bc");
-    }
-    status = extractByteCodeBinary(*output, AMD_COMGR_DATA_KIND_BC, dumpFileName, binaryData,
+  res = amd::Comgr::do_action(AMD_COMGR_ACTION_LINK_BC_TO_BC, action.get(), inputs, *output);
+  if (res != AMD_COMGR_STATUS_SUCCESS) {
+    return false;
+  }
+  extractBuildLog(*output);
+  std::string dumpFileName;
+  if (amdOptions->isDumpFlagSet(amd::option::DUMP_BC_LINKED)) {
+    dumpFileName = amdOptions->getDumpFileName("_linked.bc");
+  }
+  auto status = extractByteCodeBinary(*output, AMD_COMGR_DATA_KIND_BC, dumpFileName, binaryData,
                                    binarySize);
-  }
-
-  if (hasAction) {
-    amd::Comgr::destroy_action_info(action);
-  }
-
+  
   return (status == AMD_COMGR_STATUS_SUCCESS);
 }
 
@@ -1396,7 +1399,7 @@ int32_t Program::build(const std::string& sourceCode, const char* origOptions,
 // ================================================================================================
 bool Program::load() {
   coLoaded_ = setKernels(const_cast<void*>(binary().first), binary().second, BinaryFd().first,
-                    BinaryFd().second, BinaryURI());
+                         BinaryFd().second, BinaryURI());
   return coLoaded_;
 }
 

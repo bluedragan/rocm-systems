@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime_api.h"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
+#include "comgrctx.hpp"  // For amd::Comgr and ComgrUniqueHandle
 
 // Forward declaration for Unique FD
 struct UniqueFD;

@@ -28,6 +28,10 @@ THE SOFTWARE.
 namespace hip {
 std::unordered_set<LinkProgram*> LinkProgram::linker_set_;
 
+using amd::ComgrDataSetUniqueHandle;
+using amd::ComgrActionInfoUniqueHandle;
+using amd::ComgrDataUniqueHandle;
+
 namespace helpers {
 
 size_t constexpr strLiteralLength(char const* str) {
@@ -528,39 +532,51 @@ bool linkLLVMBitcode(const amd_comgr_data_set_t linkInputs, const std::string& i
                      std::vector<std::string>& linkOptions, std::string& buildLog,
                      std::vector<char>& LinkedLLVMBitcode) {
   const amd_comgr_language_t lang = AMD_COMGR_LANGUAGE_HIP;
-  amd_comgr_action_info_t action;
+  ComgrActionInfoUniqueHandle LinkAction;
 
-  if (!createAction(action, linkOptions, isa, lang)) {
+  if (LinkAction.Create() != AMD_COMGR_STATUS_SUCCESS) {
     return false;
   }
 
-  amd_comgr_data_set_t output;
-  if (auto res = amd::Comgr::create_data_set(&output); res != AMD_COMGR_STATUS_SUCCESS) {
-    amd::Comgr::destroy_action_info(action);
+  ComgrDataSetUniqueHandle output;
+  if (output.Create() != AMD_COMGR_STATUS_SUCCESS) {
     return false;
   }
 
-  if (auto res = amd::Comgr::do_action(AMD_COMGR_ACTION_LINK_BC_TO_BC, action, linkInputs, output);
-      res != AMD_COMGR_STATUS_SUCCESS) {
-    amd::Comgr::destroy_action_info(action);
-    amd::Comgr::destroy_data_set(output);
+  // If inputs contain BC_BUNDLE, unbundle first to BC; else link inputs as-is.
+  size_t bundleCount = 0;
+  auto res = amd::Comgr::action_data_count(linkInputs, AMD_COMGR_DATA_KIND_BC_BUNDLE, &bundleCount);
+  if (res != AMD_COMGR_STATUS_SUCCESS) {
     return false;
   }
 
-  if (!extractBuildLog(output, buildLog)) {
-    amd::Comgr::destroy_action_info(action);
-    amd::Comgr::destroy_data_set(output);
+  if (bundleCount > 0) {
+    ComgrDataSetUniqueHandle unbundleInputs;
+    if (unbundleInputs.Create() != AMD_COMGR_STATUS_SUCCESS) {
+      return false;
+    }
+    res = amd::Comgr::do_action(AMD_COMGR_ACTION_UNBUNDLE, LinkAction.get(), linkInputs, unbundleInputs.get());
+    if (res != AMD_COMGR_STATUS_SUCCESS) {
+      return false;
+    }
+    res = amd::Comgr::do_action(AMD_COMGR_ACTION_LINK_BC_TO_BC, LinkAction.get(), unbundleInputs.get(), output.get());
+    if (res != AMD_COMGR_STATUS_SUCCESS) {
+      return false;
+    }
+  } else {
+    res = amd::Comgr::do_action(AMD_COMGR_ACTION_LINK_BC_TO_BC, LinkAction.get(), linkInputs, output.get());
+    if (res != AMD_COMGR_STATUS_SUCCESS) {
+      return false;
+    }
+  }
+  if (!extractBuildLog(output.get(), buildLog)) {
     return false;
   }
 
-  if (!extractByteCodeBinary(output, AMD_COMGR_DATA_KIND_BC, LinkedLLVMBitcode)) {
-    amd::Comgr::destroy_action_info(action);
-    amd::Comgr::destroy_data_set(output);
+  if (!extractByteCodeBinary(output.get(), AMD_COMGR_DATA_KIND_BC, LinkedLLVMBitcode)) {
     return false;
   }
 
-  amd::Comgr::destroy_action_info(action);
-  amd::Comgr::destroy_data_set(output);
   return true;
 }
 
@@ -1180,6 +1196,20 @@ bool LinkProgram::AddLinkerDataImpl(std::vector<char>& link_data, hipJitInputTyp
       LogError("Error in hip Linker: Unable to unbundle SPIRV Bitcode");
       return false;
     }
+  } else if (is_bundled_ && input_type == hipJitInputLLVMBundledBitcode) {
+    // Unbundle bundled BC using COMGR when runtime unbundler is disabled
+    if (!findIsa()) {
+      return false;
+    }
+    std::string bundle_entry_id = "hip-" + isa_;
+    const char* bundleEntryIDs[] = {bundle_entry_id.c_str()};
+    size_t bundleEntryIDsCount = 1;
+    if (!helpers::UnbundleUsingComgr(link_data, isa_, link_options_, build_log_, llvm_code_object,
+                                     bundleEntryIDs, bundleEntryIDsCount)) {
+      LogError("Error in hip Linker: Unable to unbundle LLVM Bundled Bitcode using COMGR");
+      return false;
+    }
+    input_type = hipJitInputLLVMBitcode;
   } else {
     llvm_code_object.assign(link_data.begin(), link_data.end());
   }

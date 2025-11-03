@@ -29,68 +29,10 @@ THE SOFTWARE.
 #include "comgrctx.hpp"
 #include "amd_hsa_elf.hpp"
 namespace hip {
-namespace comgr_helper {
 
-template <typename comgr_T> class ComgrUniqueHandle {
- public:
-  ComgrUniqueHandle() = default;
-  // constructor which takes ownership of a correctly initialzed handle
-  ComgrUniqueHandle(comgr_T& handle) : comgr_obj_(handle) { handle = {0}; };
-
-  template <typename T = comgr_T, std::enable_if_t<std::is_same_v<T, amd_comgr_data_set_t> ||
-                                                       std::is_same_v<T, amd_comgr_action_info_t>,
-                                                   bool> = true>
-  [[nodiscard]] amd_comgr_status_t Create() {
-    if constexpr (std::is_same_v<T, amd_comgr_data_set_t>) {
-      return amd::Comgr::create_data_set(&comgr_obj_);
-    } else if constexpr (std::is_same_v<T, amd_comgr_action_info_t>) {
-      return amd::Comgr::create_action_info(&comgr_obj_);
-    }
-
-    // Unreachable code
-    return AMD_COMGR_STATUS_SUCCESS;
-  }
-
-  template <typename T = comgr_T,
-            std::enable_if_t<std::is_same_v<T, amd_comgr_data_t>, bool> = true>
-  [[nodiscard]] amd_comgr_status_t Create(amd_comgr_data_kind_t kind) {
-    return amd::Comgr::create_data(kind, &comgr_obj_);
-  }
-
-  ~ComgrUniqueHandle() {
-    if (comgr_obj_.handle != 0) {
-      if constexpr (std::is_same_v<comgr_T, amd_comgr_data_set_t>) {
-        amd::Comgr::destroy_data_set(comgr_obj_);
-      } else if constexpr (std::is_same_v<comgr_T, amd_comgr_action_info_t>) {
-        amd::Comgr::destroy_action_info(comgr_obj_);
-      } else if constexpr (std::is_same_v<comgr_T, amd_comgr_data_t>) {
-        amd::Comgr::release_data(comgr_obj_);
-      }
-    }
-  }
-
-  // Delete all copy and move operators
-  ComgrUniqueHandle(ComgrUniqueHandle&) = delete;
-  ComgrUniqueHandle(ComgrUniqueHandle&&) = delete;
-  ComgrUniqueHandle& operator=(ComgrUniqueHandle&) = delete;
-  ComgrUniqueHandle& operator=(ComgrUniqueHandle&&) = delete;
-
-  // Method to access data
-  comgr_T get() const {
-    assert(comgr_obj_.handle != 0);
-    return comgr_obj_;
-  }
-
- private:
-  comgr_T comgr_obj_{0};
-};
-
-
-typedef ComgrUniqueHandle<amd_comgr_data_set_t> ComgrDataSetUniqueHandle;
-typedef ComgrUniqueHandle<amd_comgr_action_info_t> ComgrActionInfoUniqueHandle;
-typedef ComgrUniqueHandle<amd_comgr_data_t> ComgrDataUniqueHandle;
-
-}  // namespace comgr_helper
+using ComgrDataSetUniqueHandle = amd::ComgrDataSetUniqueHandle;
+using ComgrActionInfoUniqueHandle = amd::ComgrActionInfoUniqueHandle;
+using ComgrDataUniqueHandle = amd::ComgrDataUniqueHandle;
 
 FatBinaryInfo::FatBinaryInfo(const char* fname, const void* image)
     : foffset_(0), image_(image), image_mapped_(false), uri_(std::string()) {
@@ -276,8 +218,8 @@ static bool UncompressAndPopulateCodeObject(
 
   bool passed = false;
   do {
-    comgr_helper::ComgrDataSetUniqueHandle bundled_co, unbundled_co;
-    comgr_helper::ComgrDataUniqueHandle input_bundle;
+    ComgrDataSetUniqueHandle bundled_co, unbundled_co;
+    ComgrDataUniqueHandle input_bundle;
     if (auto comgr_status = bundled_co.Create(); comgr_status != AMD_COMGR_STATUS_SUCCESS) {
       LogError("Error in creating bundled_co");
       break;
@@ -313,7 +255,7 @@ static bool UncompressAndPopulateCodeObject(
       break;
     }
 
-    comgr_helper::ComgrActionInfoUniqueHandle unbundle_action;
+    ComgrActionInfoUniqueHandle unbundle_action;
     if (auto comgr_status = unbundle_action.Create(); comgr_status != AMD_COMGR_STATUS_SUCCESS) {
       LogError("Error in creating unbundle action");
       break;
@@ -396,7 +338,7 @@ static bool PopulateCodeObjectMap(
     std::map<std::string, std::pair<const void*, size_t>>& code_obj_map) {
   bool passed = false;
   do {
-    comgr_helper::ComgrDataUniqueHandle data_object;
+    ComgrDataUniqueHandle data_object;
     if (auto comgr_status = data_object.Create(AMD_COMGR_DATA_KIND_FATBIN);
         comgr_status != AMD_COMGR_STATUS_SUCCESS) {
       LogPrintfError("Creating data object failed with status %d ", comgr_status);
@@ -557,10 +499,10 @@ hipError_t FatBinaryInfo::ExtractFatBinaryUsingCOMGR(const std::vector<hip::Devi
         std::string target_id = device->devices()[0]->isa().targetId();
         std::string isa = "amdgcn-amd-amdhsa--" + target_id;
 
-        comgr_helper::ComgrDataSetUniqueHandle spirv_data_set;
-        comgr_helper::ComgrDataSetUniqueHandle reloc_data;
-        comgr_helper::ComgrDataUniqueHandle spirv_data;
-        comgr_helper::ComgrActionInfoUniqueHandle reloc_action;
+        ComgrDataSetUniqueHandle spirv_data_set;
+        ComgrDataSetUniqueHandle reloc_data;
+        ComgrDataUniqueHandle spirv_data;
+        ComgrActionInfoUniqueHandle reloc_action;
 
         if (auto comgr_status = spirv_data_set.Create(); comgr_status != AMD_COMGR_STATUS_SUCCESS) {
           LogError("Failed to create SPIRV Data set");
@@ -631,8 +573,8 @@ hipError_t FatBinaryInfo::ExtractFatBinaryUsingCOMGR(const std::vector<hip::Devi
           break;
         }
 
-        comgr_helper::ComgrActionInfoUniqueHandle exe_action;
-        comgr_helper::ComgrDataSetUniqueHandle exe_output;
+        ComgrActionInfoUniqueHandle exe_action;
+        ComgrDataSetUniqueHandle exe_output;
         if (auto comgr_status = exe_action.Create(); comgr_status != AMD_COMGR_STATUS_SUCCESS) {
           LogError("Failed to create exe action");
           break;
@@ -666,7 +608,7 @@ hipError_t FatBinaryInfo::ExtractFatBinaryUsingCOMGR(const std::vector<hip::Devi
         }
 
         // Move ownership of exe_data_handle to exe_data
-        comgr_helper::ComgrDataUniqueHandle exe_data(exe_data_handle);
+        ComgrDataUniqueHandle exe_data(exe_data_handle);
         size_t co_size = 0;
         if (auto comgr_status = amd::Comgr::get_data(exe_data.get(), &co_size, NULL);
             comgr_status != AMD_COMGR_STATUS_SUCCESS) {
