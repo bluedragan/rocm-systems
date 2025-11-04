@@ -1714,6 +1714,92 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                     }
                 }
             }
+            else if(header->kind == ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY)
+            {
+                // ToDo: add caching
+                // ToDo "if(get_use_timemory())"
+                // ToDo: shall we process stacked allocations?
+                // ToDo: do we need separate tracks for events
+
+                auto* record =
+                    static_cast<rocprofiler_buffer_tracing_scratch_memory_record_t*>(
+                        header->payload);
+
+                const auto* agent = tool_data->get_gpu_tool_agent(record->agent_id);
+                auto device_id = static_cast<uint32_t>(agent->device_id);
+
+                auto _corr_id = record->correlation_id.internal;
+                auto _beg_ns  = record->start_timestamp;
+                auto _end_ns  = record->end_timestamp;
+                auto _name =
+                    tool_data->buffered_tracing_info.at(record->kind, record->operation);
+
+                auto _stream_id = get_stream_id(record).handle;
+                if(_stream_id == 0)
+                {
+                    // Scratch memory event is not associated with a HIP stream
+                    _group_by_queue = true;
+                }
+
+                if(get_use_perfetto())
+                {
+                    using counter_track = perfetto_counter_track<rocprofiler_buffer_tracing_scratch_memory_record_t>;
+
+                    auto track_name = [&](const char* _v) {
+                        return JOIN("", "GPU Scratch Memory [", device_id, "] (S) ", _v);
+                    };
+
+                    if(!counter_track::exists(device_id))
+                    {
+                        counter_track::emplace(device_id, track_name("Alloc"), "bytes");
+                    }
+
+                    if (record->allocation_size > 0)
+                    {
+                        TRACE_COUNTER("rocm_scratch_memory",
+                            counter_track::at(device_id, 0),
+                            _beg_ns, record->allocation_size);
+                    }
+
+                    auto add_perfetto_annotations = [&](::perfetto::EventContext ctx) {
+                        if(config::get_perfetto_annotations())
+                        {
+                            tracing::add_perfetto_annotation(ctx, "begin_ns", _beg_ns);
+                            tracing::add_perfetto_annotation(ctx, "end_ns", _end_ns);
+                            tracing::add_perfetto_annotation(ctx, "corr_id", _corr_id);
+                            tracing::add_perfetto_annotation(ctx, "stream_id",
+                                                             _stream_id);
+                        }
+                    };
+
+                    if(_group_by_queue)
+                    {
+                        const auto _track = tracing::get_perfetto_track(
+                            category::rocm_scratch_memory{}, track_name, "Events");
+
+                        tracing::push_perfetto(category::rocm_memory_copy{}, _name.data(),
+                                               _track, _beg_ns,
+                                               ::perfetto::Flow::ProcessScoped(_corr_id),
+                                               add_perfetto_annotations);
+
+                        tracing::pop_perfetto(category::rocm_memory_copy{}, "", _track,
+                                              _end_ns);
+                    }
+                    else
+                    {
+                        const auto _track = tracing::get_perfetto_track(
+                            category::rocm_hip_stream{}, _track_desc_stream, _stream_id);
+
+                        tracing::push_perfetto(category::rocm_hip_stream{}, _name.data(),
+                                               _track, _beg_ns,
+                                               ::perfetto::Flow::ProcessScoped(_corr_id),
+                                               add_perfetto_annotations);
+
+                        tracing::pop_perfetto(category::rocm_hip_stream{}, "", _track,
+                                              _end_ns);
+                    }
+                }
+            }
             else if(header->kind == ROCPROFILER_BUFFER_TRACING_MEMORY_COPY)
             {
                 auto* record =
@@ -2189,6 +2275,18 @@ tool_init(rocprofiler_client_finalize_t fini_func, void* user_data)
         ROCPROFILER_CALL(rocprofiler_configure_buffer_tracing_service(
             _data->primary_ctx, ROCPROFILER_BUFFER_TRACING_MEMORY_COPY, nullptr, 0,
             _data->memory_copy_buffer));
+    }
+
+    if(_buffered_domain.count(ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY) > 0)
+    {
+        ROCPROFILER_CALL(rocprofiler_create_buffer(
+            _data->primary_ctx, buffer_size, watermark,
+            ROCPROFILER_BUFFER_POLICY_LOSSLESS, tool_tracing_buffered, tool_data,
+            &_data->scratch_memory_buffer));
+
+        ROCPROFILER_CALL(rocprofiler_configure_buffer_tracing_service(
+            _data->primary_ctx, ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY, nullptr, 0,
+            _data->scratch_memory_buffer));
     }
 
 #if(ROCPROFILER_VERSION >= 600)

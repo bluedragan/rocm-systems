@@ -361,7 +361,6 @@ config_settings(const std::shared_ptr<settings>& _config)
 
     _skip_domains.emplace("kernel_dispatch");
     _skip_domains.emplace("page_migration");
-    _skip_domains.emplace("scratch_memory");
 
     _add_operation_settings(
         "MARKER_API", callback_tracing_info[ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API],
@@ -636,7 +635,7 @@ get_backtrace_operations(rocprofiler_callback_tracing_kind_t kindv)
 {
     ROCPROFSYS_CONDITIONAL_ABORT_F(
         callback_operation_option_names.count(kindv) == 0,
-        "callback_operation_operation_names does not have value for %i\n", kindv);
+        "callback_operation_option_names does not have value for %i\n", kindv);
 
     auto _data = get_operations_impl(
         kindv, callback_operation_option_names.at(kindv).operations_annotate_backtrace);

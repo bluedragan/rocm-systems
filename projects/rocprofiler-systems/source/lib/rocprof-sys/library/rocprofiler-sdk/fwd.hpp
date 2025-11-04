@@ -130,7 +130,7 @@ using backtrace_operation_map_t =
 
 struct client_data
 {
-    static constexpr size_t num_buffers  = 4;
+    static constexpr size_t num_buffers  = 5;
     static constexpr size_t num_contexts = 2;
 
     using buffer_name_info_t   = rocprofiler::sdk::buffer_name_info_t<std::string_view>;
@@ -148,6 +148,7 @@ struct client_data
     rocprofiler_buffer_id_t                   kernel_dispatch_buffer    = { 0 };
     rocprofiler_buffer_id_t                   memory_copy_buffer        = { 0 };
     rocprofiler_buffer_id_t                   memory_alloc_buffer       = { 0 };
+    rocprofiler_buffer_id_t                   scratch_memory_buffer     = { 0 };
     rocprofiler_buffer_id_t                   counter_collection_buffer = { 0 };
     std::vector<tool_agent>                   cpu_agents                = {};
     std::vector<tool_agent>                   gpu_agents                = {};
@@ -191,6 +192,7 @@ client_data::get_buffers() const
         kernel_dispatch_buffer,
         memory_copy_buffer,
         memory_alloc_buffer,
+        scratch_memory_buffer,
         counter_collection_buffer,
     };
 }
