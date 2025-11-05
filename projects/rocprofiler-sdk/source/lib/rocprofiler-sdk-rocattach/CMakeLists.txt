@@ -48,7 +48,7 @@ set_target_properties(
                SKIP_BUILD_RPATH OFF
                BUILD_RPATH "\$ORIGIN"
                INSTALL_RPATH "\$ORIGIN"
-               DEFINE_SYMBOL rocattach_EXPORTS)
+               DEFINE_SYMBOL ROCATTACH_EXPORTS)
 
 install(
     TARGETS rocprofiler-sdk-rocattach-shared-library

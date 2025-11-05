@@ -51,7 +51,12 @@ namespace rocattach
 {
 namespace
 {
-/* Copied from glibc's elf.h.  */
+// When injecting assembly into a process, other threads will continue running and may execute our
+// injected code, resulting in illegal instructions, segmentation faults, or worse. A common
+// technique to avoid this is to inject code at the program entry address, as this is extremely
+// unlikely to be called again in a multithreaded process. To determine this address, we inspect the
+// auxv file for the target process.
+/* Following code is copied from glibc's elf.h.  */
 typedef struct
 {
     uint64_t a_type; /* Entry type */
@@ -76,7 +81,7 @@ get_auxv_entry(int pid, size_t& entry_addr)
     snprintf(filename, sizeof filename, "/proc/%d/auxv", pid);
 
     fd = open(filename, O_RDONLY);
-    if(fd < 0) ROCP_ERROR << "Unable to open auxv file " << filename;
+    if(fd < 0) ROCP_ERROR << "[rocprofiler-sdk-rocattach] Unable to open auxv file " << filename;
 
     entry_addr = 0;
     while(read(fd, buf, auxv_size) == auxv_size && entry_addr == 0)
@@ -93,9 +98,10 @@ get_auxv_entry(int pid, size_t& entry_addr)
 
     if(entry_addr == 0)
     {
-        ROCP_ERROR << "Unexpected mising AT_ENTRY for " << filename;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Unexpected mising AT_ENTRY for " << filename;
     }
-    ROCP_TRACE << "Entry address found to be " << entry_addr << " from " << filename;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] Entry address found to be " << entry_addr << " from "
+               << filename;
 }
 
 // Very limited list of operations for logging only.
@@ -122,47 +128,48 @@ convert_ptrace_error(int error)
 {
     switch(error)
     {
-        case EPERM: return ROCATTACH_STATUS_PTRACE_OPERATION_NOT_PERMITTED;
-        case ESRCH: return ROCATTACH_STATUS_PTRACE_PROCESS_NOT_FOUND;
-        default: return ROCATTACH_STATUS_PTRACE_ERROR;
+        case EPERM: return ROCATTACH_STATUS_ERROR_PTRACE_OPERATION_NOT_PERMITTED;
+        case ESRCH: return ROCATTACH_STATUS_ERROR_PTRACE_PROCESS_NOT_FOUND;
+        default: return ROCATTACH_STATUS_ERROR_PTRACE_ERROR;
     }
 }
 
 // Boilerplate around ptrace calls.
 // If an error occurs, logs the error and returns an appropriate rocattach_status_t.
 #define PTRACE_CALL(op, pid, addr, data)                                                           \
-    ROCP_TRACE << "ptrace call params(" << ptrace_op_name(op) << "(" << op << "), " << pid << ", " \
-               << (uint64_t) addr << ", " << (uint64_t) data << ")";                               \
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace call params(" << ptrace_op_name(op) << "("   \
+               << op << "), " << pid << ", " << (uint64_t) addr << ", " << (uint64_t) data << ")"; \
     if(errno = 0, ptrace(op, pid, addr, data); errno != 0)                                         \
     {                                                                                              \
-        ROCP_ERROR << "ptrace call failed. errno: " << errno << " - " << strerror(errno)           \
-                   << " params(" << ptrace_op_name(op) << "(" << op << "), " << pid << ", "        \
-                   << (uint64_t) addr << ", " << (uint64_t) data << ")";                           \
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] ptrace call failed. errno: " << errno << " - "  \
+                   << strerror(errno) << ". params(" << ptrace_op_name(op) << "(" << op << "), "   \
+                   << pid << ", " << (uint64_t) addr << ", " << (uint64_t) data << ")";            \
         return convert_ptrace_error(errno);                                                        \
     }
 
 // Changes the order of parameters for PEEKDATA so it can be used like other operations.
-// value should be uint64_t
+// value must be uint64_t
 #define PTRACE_PEEK(pid, addr, read_value)                                                         \
     static_assert(std::is_same<decltype(read_value), uint64_t>::value);                            \
-    ROCP_TRACE << "ptrace call params(PTRACE_PEEKDATA(2), " << pid << ", " << (uint64_t) addr      \
-               << ", 0)";                                                                          \
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace call params(PTRACE_PEEKDATA(2), " << pid     \
+               << ", " << (uint64_t) addr << ", 0)";                                               \
     if(errno = 0, read_value = ptrace(PTRACE_PEEKDATA, pid, addr, NULL); errno != 0)               \
     {                                                                                              \
-        ROCP_ERROR << "ptrace call failed. errno: " << errno << " params(PTRACE_PEEKDATA(2), "     \
-                   << pid << ", " << (uint64_t) addr << ", 0)";                                    \
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] ptrace call failed. errno: " << errno           \
+                   << ". params(PTRACE_PEEKDATA(2), " << pid << ", " << (uint64_t) addr << ", 0)"; \
         return convert_ptrace_error(errno);                                                        \
     }
 
-// Helper macro for the signal_handler where cont is called but nothing should be returned
+// Helper macro for the signal_handler where cont is called but will not return inside the macro
 // error is left in errno for processing
 #define PTRACE_CONT_NO_RETURN(pid, addr, data)                                                     \
-    ROCP_TRACE << "ptrace call params(PTRACE_CONT(7), " << pid << ", " << (uint64_t) addr << ", "  \
-               << (uint64_t) data << ")";                                                          \
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace call params(PTRACE_CONT(7), " << pid << ", " \
+               << (uint64_t) addr << ", " << (uint64_t) data << ")";                               \
     if(errno = 0, ptrace(PTRACE_CONT, pid, addr, data); errno != 0)                                \
     {                                                                                              \
-        ROCP_ERROR << "ptrace call failed. errno: " << errno << " params(PTRACE_CONT(7), " << pid  \
-                   << ", " << (uint64_t) addr << ", " << (uint64_t) data << ")";                   \
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] ptrace call failed. errno: " << errno           \
+                   << ". params(PTRACE_CONT(7), " << pid << ", " << (uint64_t) addr << ", "        \
+                   << (uint64_t) data << ")";                                                      \
     }
 
 // Helper macro for handling any rocattach_status returning call
@@ -171,7 +178,8 @@ convert_ptrace_error(int error)
         auto status = func;                                                                        \
         if(status != ROCATTACH_STATUS_SUCCESS)                                                     \
         {                                                                                          \
-            ROCP_ERROR << "rocattach call failed. error: " << status << ", invocation: " << #func; \
+            ROCP_ERROR << "[rocprofiler-sdk-rocattach] rocattach call failed. error: " << status   \
+                       << ", invocation: " << #func;                                               \
             return status;                                                                         \
         }                                                                                          \
     }
@@ -191,8 +199,9 @@ PTraceSession::attach()
     {
         return ROCATTACH_STATUS_ERROR;
     }
+    // SEIZE attaches without stopping the process
     PTRACE_CALL(PTRACE_SEIZE, m_pid, NULL, NULL);
-    ROCP_INFO << "Successfully attached to pid " << m_pid;
+    ROCP_INFO << "[rocprofiler-sdk-rocattach] Successfully attached to pid " << m_pid;
     ROCATTACH_CALL(start_signal_handler());
     m_state = PTRACE_SESSION_STATE_RUNNING;
     return ROCATTACH_STATUS_SUCCESS;
@@ -215,7 +224,7 @@ PTraceSession::detach()
     ROCATTACH_CALL(stop_signal_handler());
     PTRACE_CALL(PTRACE_DETACH, m_pid, NULL, NULL);
     m_state = PTRACE_SESSION_STATE_DETACHED;
-    ROCP_INFO << "Detached from pid " << m_pid;
+    ROCP_INFO << "[rocprofiler-sdk-rocattach] Detached from pid " << m_pid;
     return ROCATTACH_STATUS_SUCCESS;
 }
 
@@ -263,6 +272,16 @@ PTraceSession::stop_signal_handler()
     return status;
 }
 
+// While we are attached, we must monitor the target process for:
+// - Process exits (WIFEXITED)
+// - Process is killed (WIFSIGNALED)
+// - Process is stopped (WIFSTOPPED)
+// When the process exits or is killed, we simply report the status change and end the signal
+// handling function. When the process is stopped, we use our current state to determine what to do
+// - If ATTACHED, call PTRACE_CONT with the signal to resume the process
+// - If WAITING_FOR_BREAKPOINT, leave the process stopped and transition our state to ATTACHED to
+//   signal to the main thread which is awaiting a breakpoint
+// See the comment on ptrace_session_signal_handler_state_t for more information.
 void
 PTraceSession::ptrace_signal_handler_func(
     int                                                 _pid,
@@ -285,7 +304,9 @@ PTraceSession::ptrace_signal_handler_func(
         }
         else if(retval == -1)
         {
-            ROCP_ERROR << "waitpid failed in ptrace_signal_handler_func for pid " << _pid;
+            ROCP_ERROR << "[rocprofiler-sdk-rocattach] waitpid failed in "
+                          "ptrace_signal_handler_func for pid "
+                       << _pid;
             _error.store(ROCATTACH_STATUS_ERROR);
             _state.store(PTRACE_SIGNAL_HANDLER_STATE_FINAL);
             return;
@@ -293,29 +314,36 @@ PTraceSession::ptrace_signal_handler_func(
 
         if(status != 0 && WIFEXITED(status))
         {
-            ROCP_ERROR << "process " << _pid << " exited, status=" << WEXITSTATUS(status);
+            // Process exited normally, report status and end this thread.
+            ROCP_ERROR << "[rocprofiler-sdk-rocattach] process " << _pid
+                       << " exited, status=" << WEXITSTATUS(status);
             _error.store(ROCATTACH_STATUS_SUCCESS);
             _state.store(PTRACE_SIGNAL_HANDLER_STATE_FINAL);
             return;
         }
         else if(status != 0 && WIFSIGNALED(status))
         {
-            ROCP_ERROR << "process " << _pid << " killed by signal " << WTERMSIG(status);
+            // Process was killed, report signal and end this thread.
+            ROCP_ERROR << "[rocprofiler-sdk-rocattach] process " << _pid << " killed by signal "
+                       << WTERMSIG(status);
             _error.store(ROCATTACH_STATUS_SUCCESS);
             _state.store(PTRACE_SIGNAL_HANDLER_STATE_FINAL);
             return;
         }
         else if(status != 0 && WIFSTOPPED(status))
         {
+            // Process was stopped, handle the signal
             auto sig = WSTOPSIG(status);
-            ROCP_TRACE << "process " << _pid << " stopped by signal " << sig;
-            // if we were expecting a breakpoint, change state to signal the update, otherwise
-            // forward it to the process
+            ROCP_TRACE << "[rocprofiler-sdk-rocattach] process " << _pid << " stopped by signal "
+                       << sig;
+            // If we were expecting a breakpoint, change state to signal the update, otherwise
+            // continue forward it to the process
             ptrace_session_signal_handler_state_t expected_state =
                 PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT;
             if(_state.compare_exchange_strong(expected_state, PTRACE_SIGNAL_HANDLER_STATE_ATTACHED))
             {
-                ROCP_TRACE << "process " << _pid << " hit expected breakpoint.";
+                ROCP_TRACE << "[rocprofiler-sdk-rocattach] process " << _pid
+                           << " hit expected breakpoint.";
             }
             else
             {
@@ -331,6 +359,8 @@ PTraceSession::ptrace_signal_handler_func(
 
         std::this_thread::yield();
     }
+
+    // While loop ended because we are detaching, close out gracefully.
     _error.store(ROCATTACH_STATUS_SUCCESS);
     _state.store(PTRACE_SIGNAL_HANDLER_STATE_FINAL);
 }
@@ -340,6 +370,7 @@ PTraceSession::write(size_t addr, const std::vector<uint8_t>& data, size_t size)
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
+        // If process is already stopped, use write_internal instead.
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -353,6 +384,7 @@ PTraceSession::write(size_t addr, const std::vector<uint8_t>& data, size_t size)
 rocattach_status_t
 PTraceSession::write_internal(size_t addr, const std::vector<uint8_t>& data, size_t size) const
 {
+    // Write each word one at a time
     constexpr size_t word_size = sizeof(void*);
     size_t           word_iter = 0;
     for(word_iter = 0; word_iter < (size / word_size); ++word_iter)
@@ -363,7 +395,7 @@ PTraceSession::write_internal(size_t addr, const std::vector<uint8_t>& data, siz
         PTRACE_CALL(PTRACE_POKEDATA, m_pid, addr + offset, word);
     }
 
-    // If not divisible, get the last word to do a masked partial write.
+    // If not evenly divisible, read the last word to do a masked partial write.
     size_t remainder = size % word_size;
     if(remainder != 0u)
     {
@@ -373,7 +405,7 @@ PTraceSession::write_internal(size_t addr, const std::vector<uint8_t>& data, siz
         std::memcpy(&last_word, data.data() + offset, remainder);
         PTRACE_CALL(PTRACE_POKEDATA, m_pid, addr + offset, last_word);
     }
-    ROCP_TRACE << "ptrace wrote " << size << " bytes at " << addr;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace wrote " << size << " bytes at " << addr;
     return ROCATTACH_STATUS_SUCCESS;
 }
 
@@ -382,6 +414,7 @@ PTraceSession::read(size_t addr, std::vector<uint8_t>& data, size_t size)
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
+        // If process is already stopped, use read_internal instead.
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -395,6 +428,7 @@ PTraceSession::read(size_t addr, std::vector<uint8_t>& data, size_t size)
 rocattach_status_t
 PTraceSession::read_internal(size_t addr, std::vector<uint8_t>& data, size_t size) const
 {
+    // Read each word one at a time
     data.clear();
     data.resize(size);
     constexpr size_t word_size = sizeof(void*);
@@ -406,6 +440,8 @@ PTraceSession::read_internal(size_t addr, std::vector<uint8_t>& data, size_t siz
         PTRACE_PEEK(m_pid, addr + offset, word);
         std::memcpy(data.data() + offset, &word, word_size);
     }
+
+    // If not evenly divisible, read the last word and mask off the remainder
     size_t remainder = size % word_size;
     if(remainder != 0u)
     {
@@ -414,7 +450,7 @@ PTraceSession::read_internal(size_t addr, std::vector<uint8_t>& data, size_t siz
         PTRACE_PEEK(m_pid, addr + offset, last_word);
         std::memcpy(data.data() + offset, &last_word, remainder);
     }
-    ROCP_TRACE << "ptrace read " << size << " bytes at " << addr;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace read " << size << " bytes at " << addr;
     return ROCATTACH_STATUS_SUCCESS;
 }
 
@@ -426,6 +462,7 @@ PTraceSession::swap(size_t                      addr,
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
+        // If process is already stopped, use swap_internal instead.
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -448,75 +485,100 @@ PTraceSession::swap_internal(size_t                      addr,
 }
 
 // Helper function which updates states and communicates with the signal handler thread to await a
-// single breakpoint. Updates the state to STOPPED when complete.
-// Returns an error if the signal handler or ptrace fail unexpectedly.
+// single breakpoint. Updates the state to STOPPED when complete. Returns an error if the signal
+// handler or ptrace fail unexpectedly.
 rocattach_status_t
 PTraceSession::wait_for_breakpoint()
 {
-    ROCP_TRACE << "waiting for breakpoint after trap instruction added";
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] waiting for breakpoint after trap instruction added";
+
+    // Enforce transition from ATTACHED to WAITING_FOR_BREAKPOINT
     ptrace_session_signal_handler_state_t expected_state = PTRACE_SIGNAL_HANDLER_STATE_ATTACHED;
     if(!m_ptrace_signal_handler_state.compare_exchange_strong(
            expected_state, PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT))
     {
-        ROCP_ERROR << "signal handler thread was in an unexpected state when waiting for stop. "
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] signal handler thread was in an unexpected "
+                      "state when waiting for stop. "
                       "State code: "
                    << expected_state;
         return ROCATTACH_STATUS_ERROR;
     }
+
+    // Continue until breakpoint is hit
     ROCATTACH_CALL(cont());
     while(m_ptrace_signal_handler_state.load() ==
           PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT)
     {
         std::this_thread::yield();
     }
+
+    // If signal handler is not ATTACHED, error has occurred
     if(m_ptrace_signal_handler_state.load() != PTRACE_SIGNAL_HANDLER_STATE_ATTACHED)
     {
-        ROCP_ERROR << "signal handler thread was in an unexpected state after waiting for stop";
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] signal handler thread was in an unexpected "
+                      "state after waiting for stop. State code: "
+                   << m_ptrace_signal_handler_state.load();
         return m_ptrace_signal_handler_error.load();
     }
-    // manually set state to stopped
+
+    // Manually set state to stopped
     // usually stop() handles this, but this stop was triggered manually in assembly code
     m_state = PTRACE_SESSION_STATE_STOPPED;
     return ROCATTACH_STATUS_SUCCESS;
 }
 
 // Helper function which updates states and communicates with the signal handler thread to await a
-// single stop. Returns an error if the signal handler or ptrace fail unexpectedly.
+// single stop. Updates the state to STOPPED when complete. Returns an error if the signal handler
+// or ptrace fail unexpectedly.
 rocattach_status_t
 PTraceSession::wait_for_stop()
 {
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] waiting for stop after PTRACE_INTERRUPT";
+    // Enforce transition from ATTACHED to WAITING_FOR_BREAKPOINT
     ptrace_session_signal_handler_state_t expected_state = PTRACE_SIGNAL_HANDLER_STATE_ATTACHED;
     if(!m_ptrace_signal_handler_state.compare_exchange_strong(
            expected_state, PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT))
     {
-        ROCP_ERROR << "signal handler thread was in an unexpected state when waiting for "
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] signal handler thread was in an unexpected "
+                      "state when waiting for "
                       "breakpoint. State code: "
                    << expected_state;
         return ROCATTACH_STATUS_ERROR;
     }
+
+    // Call interrupt and wait until process is stopped
     PTRACE_CALL(PTRACE_INTERRUPT, m_pid, NULL, NULL);
     while(m_ptrace_signal_handler_state.load() ==
           PTRACE_SIGNAL_HANDLER_STATE_WAITING_FOR_BREAKPOINT)
     {
         std::this_thread::yield();
     }
+
+    // If signal handler is not ATTACHED, error has occurred
     if(m_ptrace_signal_handler_state.load() != PTRACE_SIGNAL_HANDLER_STATE_ATTACHED)
     {
-        ROCP_ERROR
-            << "signal handler thread was in an unexpected state after waiting for breakpoint "
-            << m_ptrace_signal_handler_state.load();
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] signal handler thread was in an unexpected "
+                      "state after waiting for breakpoint "
+                   << m_ptrace_signal_handler_state.load();
         return m_ptrace_signal_handler_error.load();
     }
+
+    // Set state to stopped now that process is stopped.
     m_state = PTRACE_SESSION_STATE_STOPPED;
     return ROCATTACH_STATUS_SUCCESS;
 }
 
+// Makes a syscall to mmap in the target process.
+// Some sensible default parameters are used that are suitable for most applications:
+// prot = PROT_READ | PROT_WRITE
+// flags = MAP_PRIVATE | MAP_ANONYMOUS
 rocattach_status_t
 PTraceSession::simple_mmap(void*& addr, size_t length)
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
-        ROCP_ERROR << "simple_mmap called in invalid state: " << m_state;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] simple_mmap called in invalid state: "
+                   << m_state;
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -528,7 +590,8 @@ PTraceSession::simple_mmap(void*& addr, size_t length)
     get_auxv_entry(m_pid, entry_addr);
     if(entry_addr == 0)
     {
-        ROCP_ERROR << "get_auxv_entry failed to retreive program entry address";
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] get_auxv_entry failed to retreive program entry "
+                      "address";
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -562,7 +625,7 @@ PTraceSession::simple_mmap(void*& addr, size_t length)
     ROCATTACH_CALL(swap_internal(entry_addr, new_code, old_code, 3));
 
     // Execute
-    ROCP_TRACE << "Attempting to execute mmap syscall";
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] Attempting to execute mmap syscall";
     ROCATTACH_CALL(wait_for_breakpoint());
 
     // Get registers to see mmap's return values
@@ -582,12 +645,15 @@ PTraceSession::simple_mmap(void*& addr, size_t length)
     return ROCATTACH_STATUS_SUCCESS;
 }
 
+// Makes a syscall to munmap in the target process.
+// addr and length should match (or be a subset of) addr and length given to a previous mmap call.
 rocattach_status_t
 PTraceSession::simple_munmap(void*& addr, size_t length)
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
-        ROCP_ERROR << "simple_munmap called in invalid state: " << m_state;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] simple_munmap called in invalid state: "
+                   << m_state;
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -599,7 +665,8 @@ PTraceSession::simple_munmap(void*& addr, size_t length)
     get_auxv_entry(m_pid, entry_addr);
     if(entry_addr == 0)
     {
-        ROCP_ERROR << "get_auxv_entry failed to retreive program entry address";
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] get_auxv_entry failed to retreive program entry "
+                      "address";
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -629,7 +696,7 @@ PTraceSession::simple_munmap(void*& addr, size_t length)
     ROCATTACH_CALL(swap_internal(entry_addr, new_code, old_code, 3));
 
     // Execute
-    ROCP_TRACE << "Attempting to execute munmap syscall";
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] Attempting to execute munmap syscall";
     ROCATTACH_CALL(wait_for_breakpoint());
 
     // Get registers to see mmap's return values
@@ -648,6 +715,7 @@ PTraceSession::simple_munmap(void*& addr, size_t length)
     return ROCATTACH_STATUS_SUCCESS;
 }
 
+// Makes a call to library::symbol() in the target process
 rocattach_status_t
 PTraceSession::call_function(const std::string& library,
                              const std::string& symbol,
@@ -656,6 +724,7 @@ PTraceSession::call_function(const std::string& library,
     return call_function(library, symbol, ret_value, nullptr, nullptr);
 }
 
+// Makes a call to library::symbol(first_param) in the target process
 rocattach_status_t
 PTraceSession::call_function(const std::string& library,
                              const std::string& symbol,
@@ -665,6 +734,7 @@ PTraceSession::call_function(const std::string& library,
     return call_function(library, symbol, ret_value, first_param, nullptr);
 }
 
+// Makes a call to library::symbol(first_param, second_param) in the target process.
 // This supports calling a dynamically loaded function with at most 2 parameters.
 // Uses x64 calling convention: RAX for return value, RDI for first param, RSI for second param
 rocattach_status_t
@@ -676,7 +746,8 @@ PTraceSession::call_function(const std::string& library,
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
-        ROCP_ERROR << "call_function called in invalid state: " << m_state;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] call_function called in invalid state: "
+                   << m_state;
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -687,8 +758,9 @@ PTraceSession::call_function(const std::string& library,
     void* target_addr = nullptr;
     if(!find_symbol(m_pid, target_addr, library, symbol))
     {
-        ROCP_ERROR << "call_function failed to find target symbol address for " << library
-                   << "::" << symbol;
+        ROCP_ERROR
+            << "[rocprofiler-sdk-rocattach] call_function failed to find target symbol address for "
+            << library << "::" << symbol;
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -697,7 +769,8 @@ PTraceSession::call_function(const std::string& library,
     get_auxv_entry(m_pid, entry_addr);
     if(entry_addr == 0)
     {
-        ROCP_ERROR << "get_auxv_entry failed to retreive program entry address";
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] get_auxv_entry failed to retreive program entry "
+                      "address";
         return ROCATTACH_STATUS_ERROR;
     }
 
@@ -728,8 +801,8 @@ PTraceSession::call_function(const std::string& library,
     ROCATTACH_CALL(swap_internal(entry_addr, new_code, old_code, 3));
 
     // Execute
-    ROCP_TRACE << "Attempting to execute " << library << "::" << symbol << "(" << first_param
-               << ", " << second_param << ")";
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] Attempting to execute " << library << "::" << symbol
+               << "(" << first_param << ", " << second_param << ")";
     ROCATTACH_CALL(wait_for_breakpoint());
 
     // Get registers to see  return values
@@ -749,34 +822,38 @@ PTraceSession::call_function(const std::string& library,
     return ROCATTACH_STATUS_SUCCESS;
 }
 
+// Calls PTRACE_STOP and waits for the stop to complete.
+// Target process will be stopped after this call.
 rocattach_status_t
 PTraceSession::stop()
 {
     if(m_state != PTRACE_SESSION_STATE_RUNNING)
     {
-        ROCP_ERROR << "stop called in invalid state: " << m_state;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] stop called in invalid state: " << m_state;
         return ROCATTACH_STATUS_ERROR;
     }
 
     // Stop the process and update state
     ROCATTACH_CALL(wait_for_stop());
 
-    ROCP_TRACE << "ptrace stopped pid " << m_pid;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace stopped pid " << m_pid;
     return ROCATTACH_STATUS_SUCCESS;
 }
 
+// Calls PTRACE_CONT.
+// Target process will be running after this call.
 rocattach_status_t
 PTraceSession::cont()
 {
     if(m_state != PTRACE_SESSION_STATE_STOPPED)
     {
-        ROCP_ERROR << "cont called in invalid state: " << m_state;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] cont called in invalid state: " << m_state;
         return ROCATTACH_STATUS_ERROR;
     }
 
     PTRACE_CALL(PTRACE_CONT, m_pid, NULL, NULL);
     m_state = PTRACE_SESSION_STATE_RUNNING;
-    ROCP_TRACE << "ptrace resumed pid " << m_pid;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] ptrace resumed pid " << m_pid;
     return ROCATTACH_STATUS_SUCCESS;
 }
 

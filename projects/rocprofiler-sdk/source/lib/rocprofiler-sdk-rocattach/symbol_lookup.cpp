@@ -81,8 +81,8 @@ auto
 get_this_library_path()
 {
     auto _this_lib_path = get_linked_path(ROCATTACH_LIBRARY_NAME, {RTLD_NOLOAD | RTLD_LAZY});
-    LOG_IF(FATAL, !_this_lib_path)
-        << ROCATTACH_LIBRARY_NAME << " could not locate itself in the list of loaded libraries";
+    LOG_IF(FATAL, !_this_lib_path) << "[rocprofiler-sdk-rocattach] " << ROCATTACH_LIBRARY_NAME
+                                   << " could not locate itself in the list of loaded libraries";
     return fs::path{*_this_lib_path}.parent_path().string();
 }
 
@@ -103,8 +103,9 @@ get_library_handle(std::string_view _lib_name)
 
     if(_lib_handle)
     {
-        LOG(INFO) << "loaded " << _lib_name << " library at " << _lib_path.string()
-                  << " (handle=" << _lib_handle << ") via RTLD_NOLOAD | RTLD_LAZY";
+        LOG(INFO) << "[rocprofiler-sdk-rocattach] loaded " << _lib_name << " library at "
+                  << _lib_path.string() << " (handle=" << _lib_handle
+                  << ") via RTLD_NOLOAD | RTLD_LAZY";
     }
 
     // try to load with the given path
@@ -114,8 +115,9 @@ get_library_handle(std::string_view _lib_name)
 
         if(_lib_handle)
         {
-            LOG(INFO) << "loaded " << _lib_name << " library at " << _lib_path.string()
-                      << " (handle=" << _lib_handle << ") via RTLD_GLOBAL | RTLD_LAZY";
+            LOG(INFO) << "[rocprofiler-sdk-rocattach] loaded " << _lib_name << " library at "
+                      << _lib_path.string() << " (handle=" << _lib_handle
+                      << ") via RTLD_GLOBAL | RTLD_LAZY";
         }
     }
 
@@ -133,8 +135,8 @@ get_library_handle(std::string_view _lib_name)
         _lib_handle = dlopen(_lib_path.c_str(), RTLD_GLOBAL | RTLD_LAZY);
     }
 
-    LOG(INFO) << "loaded " << _lib_name << " library at " << _lib_path.string()
-              << " (handle=" << _lib_handle << ")";
+    LOG(INFO) << "[rocprofiler-sdk-rocattach] loaded " << _lib_name << " library at "
+              << _lib_path.string() << " (handle=" << _lib_handle << ")";
 
     LOG_IF(WARNING, _lib_handle == nullptr) << _lib_name << " failed to load\n";
 
@@ -161,7 +163,7 @@ find_library(void*& addr, int inpid, const std::string& library)
 
     if(!maps)
     {
-        ROCP_ERROR << "Couldn't open " << filename.str();
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Couldn't open " << filename.str();
         return false;
     }
 
@@ -170,14 +172,16 @@ find_library(void*& addr, int inpid, const std::string& library)
     {
         if(line.find(library) != std::string::npos)
         {
-            ROCP_TRACE << "entry in pid " << inpid << " maps file is: " << line;
+            ROCP_TRACE << "[rocprofiler-sdk-rocattach] Entry in pid " << inpid
+                       << " maps file is: " << line;
             break;
         }
     }
 
     if(!maps)
     {
-        ROCP_ERROR << "Couldn't find library " << library << " in " << filename.str();
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Couldn't find library " << library << " in "
+                   << filename.str();
         return false;
     }
 
@@ -194,7 +198,8 @@ find_symbol(int target_pid, void*& addr, const std::string& library, const std::
     searchname << library << "::" << symbol;
     if(auto itr = m_target_symbol_addrs.find(searchname.str()); itr != m_target_symbol_addrs.end())
     {
-        ROCP_TRACE << "found symbol for " << searchname.str() << " at " << itr->second;
+        ROCP_TRACE << "[rocprofiler-sdk-rocattach] Found symbol for " << searchname.str() << " at "
+                   << itr->second;
         return itr->second != nullptr;
     }
 
@@ -208,14 +213,14 @@ find_symbol(int target_pid, void*& addr, const std::string& library, const std::
 
     if(!libraryaddr)
     {
-        ROCP_ERROR << "host couldn't dlopen " << library;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Host couldn't dlopen " << library;
         return false;
     }
 
     symboladdr = dlsym(libraryaddr, symbol.c_str());
     if(!symboladdr)
     {
-        ROCP_ERROR << "host couldn't dlsym " << symbol;
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Host couldn't dlsym " << symbol;
         return false;
     }
 
@@ -223,20 +228,23 @@ find_symbol(int target_pid, void*& addr, const std::string& library, const std::
     void* hostlibraryaddr;
     if(!find_library(hostlibraryaddr, getpid(), library))
     {
-        ROCP_ERROR << "couldn't determine where " << library << " was loaded for host";
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Couldn't determine where " << library
+                   << " was loaded for host";
         return false;
     }
 
     // Caluclate the offset
     size_t offset =
         reinterpret_cast<size_t>(symboladdr) - reinterpret_cast<size_t>(hostlibraryaddr);
-    ROCP_TRACE << "offset of " << symbol << " into " << library << " calculated as " << offset;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] Offset of " << symbol << " into " << library
+               << " calculated as " << offset;
 
     // Find the start address of the library in the target process
     void* targetlibraryaddr;
     if(!find_library(targetlibraryaddr, target_pid, library))
     {
-        ROCP_ERROR << "couldn't determine where " << library << " was loaded for target";
+        ROCP_ERROR << "[rocprofiler-sdk-rocattach] Couldn't determine where " << library
+                   << " was loaded for target";
         return false;
     }
 
@@ -244,7 +252,8 @@ find_symbol(int target_pid, void*& addr, const std::string& library, const std::
     // NOLINTNEXTLINE(performance-no-int-to-ptr)
     addr = reinterpret_cast<void*>(reinterpret_cast<size_t>(targetlibraryaddr) + offset);
     m_target_symbol_addrs[searchname.str()] = addr;
-    ROCP_TRACE << "found symbol for " << searchname.str() << " at " << addr;
+    ROCP_TRACE << "[rocprofiler-sdk-rocattach] Found symbol for " << searchname.str() << " at "
+               << addr;
     return true;
 }
 }  // namespace rocattach
