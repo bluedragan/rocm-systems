@@ -1717,7 +1717,6 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
             else if(header->kind == ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY)
             {
                 // ToDo: add caching
-                // ToDo "if(get_use_timemory())"
                 // ToDo: shall we process stacked allocations?
                 // ToDo: do we need separate tracks for events
 
@@ -1739,6 +1738,21 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                 {
                     // Scratch memory event is not associated with a HIP stream
                     _group_by_queue = true;
+                }
+
+                if(get_use_timemory())
+                {
+                    const auto& _tinfo = thread_info::get(record->thread_id, SystemTID);
+                    auto        _tid   = _tinfo->index_data->sequent_value;
+
+                    auto _bundle = kernel_dispatch_bundle_t{ _name };
+
+                    _bundle.push(_tid).start().stop();
+                    _bundle.get([_beg_ns, _end_ns](tim::component::wall_clock* _wc) {
+                        _wc->set_value(_end_ns - _beg_ns);
+                        _wc->set_accum(_end_ns - _beg_ns);
+                    });
+                    _bundle.pop();
                 }
 
                 if(get_use_perfetto())
