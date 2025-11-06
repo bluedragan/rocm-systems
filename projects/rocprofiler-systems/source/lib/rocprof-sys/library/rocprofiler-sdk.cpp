@@ -1718,7 +1718,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
             {
                 // ToDo: add caching
                 // ToDo: shall we process stacked allocations?
-                // ToDo: do we need separate tracks for events
+                // ToDo: do we need separate tracks for events?
 
                 auto* record =
                     static_cast<rocprofiler_buffer_tracing_scratch_memory_record_t*>(
@@ -1757,7 +1757,8 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
                 if(get_use_perfetto())
                 {
-                    using counter_track = perfetto_counter_track<rocprofiler_buffer_tracing_scratch_memory_record_t>;
+                    using counter_track = perfetto_counter_track<
+                        rocprofiler_buffer_tracing_scratch_memory_record_t>;
 
                     auto track_name = [&](const char* _v) {
                         return JOIN("", "GPU Scratch Memory [", device_id, "] (S) ", _v);
@@ -1791,12 +1792,12 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                         const auto _track = tracing::get_perfetto_track(
                             category::rocm_scratch_memory{}, track_name, "Events");
 
-                        tracing::push_perfetto(category::rocm_memory_copy{}, _name.data(),
+                        tracing::push_perfetto(category::rocm_scratch_memory{}, _name.data(),
                                                _track, _beg_ns,
                                                ::perfetto::Flow::ProcessScoped(_corr_id),
                                                add_perfetto_annotations);
 
-                        tracing::pop_perfetto(category::rocm_memory_copy{}, "", _track,
+                        tracing::pop_perfetto(category::rocm_scratch_memory{}, "", _track,
                                               _end_ns);
                     }
                     else
