@@ -2621,7 +2621,7 @@ void Runtime::CheckVirtualMemApiSupport() {
       virtual_mem_api_supported_ = true;
     }
   #else
-    virtual_mem_api_supported_ = false;
+    virtual_mem_api_supported_ = true;
   #endif
   }
 }
@@ -3665,11 +3665,17 @@ hsa_status_t Runtime::VMemoryHandleMap(void* va, size_t size, size_t in_offset,
   if (status != HSA_STATUS_SUCCESS)
     return status;
 
-  close(dmabuf_fd);
+  if (dmabuf_fd != -1) {
+    close(dmabuf_fd);
+  }
 
   // Get address that memory is mapped to
-  ret = GetAmdgpuDeviceArgs(agent, shareable_handle, &drm_fd, &drm_cpu_addr);
-  if (ret) return HSA_STATUS_ERROR;
+  if (shareable_handle.IsValid()) {
+    ret = GetAmdgpuDeviceArgs(agent, shareable_handle, &drm_fd, &drm_cpu_addr);
+    if (ret) return HSA_STATUS_ERROR;
+  } else {
+    drm_cpu_addr = reinterpret_cast<uint64_t>(va);
+  }
 
   mapped_handle_map_.emplace(
       std::piecewise_construct, std::forward_as_tuple(va),
@@ -3794,14 +3800,16 @@ hsa_status_t Runtime::MappedHandleAllowedAgent::EnableAccess(hsa_access_permissi
              reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr));
     if (mapped_ptr != va)
       return HSA_STATUS_ERROR;
+  #elif defined(_WIN32)
+    if (!rocr::os::ProtectMemory(va, size, PermissionsToMemProt(perms))) {
+      return HSA_STATUS_ERROR;
+    }
+  #endif
   } else {
     hsa_status_t status = targetAgent->driver().Map(
         shareable_handle, va, mappedHandle->offset, size, perms);
     if (status != HSA_STATUS_SUCCESS)
       return status;
-#else
-    assert(!"Unimplemented!");
-#endif
   }
   permissions = perms;
   return HSA_STATUS_SUCCESS;
@@ -3819,12 +3827,12 @@ hsa_status_t Runtime::MappedHandleAllowedAgent::RemoveAccess() {
                 reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr));
       if (mapped_ptr != va)
         return HSA_STATUS_ERROR;
-
-      permissions = HSA_ACCESS_PERMISSION_NONE;
-#else
-      assert(!"Unimplemented!");
+#elif defined(_WIN32)
+      if (!rocr::os::ProtectMemory(va, size, rocr::os::MEM_PROT_NONE)) {
+        return HSA_STATUS_ERROR;
+      }
 #endif
-
+      permissions = HSA_ACCESS_PERMISSION_NONE;
     }
   } else {
     return targetAgent->driver().Unmap(
