@@ -323,8 +323,8 @@ if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 else()
    set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 endif()
-set(CPACK_DEBIAN_PACKAGE_SUGGESTS "sudo, libdrm-dev, libdrm-amdgpu-dev")
-set(CPACK_RPM_PACKAGE_SUGGESTS "sudo, libdrm-devel, libdrm-amdgpu-devel")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "sudo, libdrm-dev, libdrm-amdgpu-dev")
+set(CPACK_RPM_PACKAGE_REQUIRES "sudo, libdrm-devel, libdrm-amdgpu-devel")
 
 ## Process the Debian install/remove scripts to update the CPACK variables
 configure_file(
