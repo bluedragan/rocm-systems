@@ -3674,6 +3674,10 @@ hsa_status_t Runtime::VMemoryHandleMap(void* va, size_t size, size_t in_offset,
     ret = GetAmdgpuDeviceArgs(agent, shareable_handle, &drm_fd, &drm_cpu_addr);
     if (ret) return HSA_STATUS_ERROR;
   } else {
+    hsa_status_t status = agent_driver.GetShareableHandle(memoryHandleIt->first, size, shareable_handle);
+    if (status != HSA_STATUS_SUCCESS) {
+      return status;
+    }
     drm_cpu_addr = reinterpret_cast<uint64_t>(va);
   }
 
@@ -3779,7 +3783,13 @@ Runtime::MappedHandleAllowedAgent::MappedHandleAllowedAgent(
   status = targetAgent->driver().ImportDMABuf(dmabuf_fd, *targetAgent,
                                               shareable_handle);
   assert(status == HSA_STATUS_SUCCESS);
-  close(dmabuf_fd);
+  if (dmabuf_fd != -1) {
+    close(dmabuf_fd);
+  }
+
+  if (!shareable_handle.IsValid()) {
+    shareable_handle.handle = _mappedHandle->shareable_handle.handle;
+  }
   if (status != HSA_STATUS_SUCCESS)
     return;
 }
@@ -3794,17 +3804,10 @@ Runtime::MappedHandleAllowedAgent::~MappedHandleAllowedAgent() {
 
 hsa_status_t Runtime::MappedHandleAllowedAgent::EnableAccess(hsa_access_permission_t perms) {
   if (targetAgent->device_type() == core::Agent::DeviceType::kAmdCpuDevice) {
-  #if defined(__linux__)
-    void* mapped_ptr =
-        mmap(va, size, PermissionsToMmapFlags(perms), MAP_SHARED | MAP_FIXED, mappedHandle->drm_fd,
-             reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr));
-    if (mapped_ptr != va)
-      return HSA_STATUS_ERROR;
-  #elif defined(_WIN32)
-    if (!rocr::os::ProtectMemory(va, size, PermissionsToMemProt(perms))) {
+    if (!rocr::os::ProtectMemory(va, size, PermissionsToMemProt(perms), mappedHandle->drm_fd,
+                                reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr))) {
       return HSA_STATUS_ERROR;
     }
-  #endif
   } else {
     hsa_status_t status = targetAgent->driver().Map(
         shareable_handle, va, mappedHandle->offset, size, perms);
@@ -3818,20 +3821,11 @@ hsa_status_t Runtime::MappedHandleAllowedAgent::EnableAccess(hsa_access_permissi
 hsa_status_t Runtime::MappedHandleAllowedAgent::RemoveAccess() {
   if (targetAgent->device_type() == core::Agent::DeviceType::kAmdCpuDevice) {
     if (permissions != HSA_ACCESS_PERMISSION_NONE) {
-#if defined(__linux__)
-      if (munmap(va, size) != 0) return HSA_STATUS_ERROR;
-
-      /* We need to keep the CPU mapping. So change it to PROT_NONE */
-      void* mapped_ptr = mmap(va, mappedHandle->size, PROT_NONE, MAP_SHARED | MAP_FIXED,
-                mappedHandle->drm_fd,
-                reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr));
-      if (mapped_ptr != va)
-        return HSA_STATUS_ERROR;
-#elif defined(_WIN32)
-      if (!rocr::os::ProtectMemory(va, size, rocr::os::MEM_PROT_NONE)) {
+      hsa_access_permission_t perms = HSA_ACCESS_PERMISSION_NONE;
+      if (!rocr::os::ProtectMemory(va, size, PermissionsToMemProt(perms), mappedHandle->drm_fd,
+                                reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr))) {
         return HSA_STATUS_ERROR;
       }
-#endif
       permissions = HSA_ACCESS_PERMISSION_NONE;
     }
   } else {
@@ -3849,7 +3843,12 @@ Runtime::MappedHandle::MappedHandle(MemoryHandle *mem_handle, AddressHandle *add
     shareable_handle(shareable_handle)
 {
   /* Create a CPU mapping with PROT_NONE */
+  #if defined(__linux__)
   auto cpu_agent = static_cast<AMD::GpuAgent*>(agentOwner())->GetNearestCpuAgent();
+  #else // Use GPU agent for windows
+  auto cpu_agent = static_cast<AMD::GpuAgent*>(agentOwner());
+  #endif
+
   auto agentPermsIt = allowed_agents.emplace(std::piecewise_construct,
                        std::forward_as_tuple(cpu_agent),
                        std::forward_as_tuple(this, cpu_agent, va,
