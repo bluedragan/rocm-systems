@@ -66,7 +66,7 @@ void KFDQMTest::CreateDestroyCpQueue(int gpuNode) {
 TEST_F(KFDQMTest, CreateDestroyCpQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->CreateDestroyCpQueue(gpuNode);
     }));
 
@@ -92,7 +92,7 @@ void KFDQMTest::SubmitNopCpQueue(int gpuNode) {
 TEST_F(KFDQMTest, SubmitNopCpQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SubmitNopCpQueue(gpuNode);
     }));
 
@@ -123,7 +123,7 @@ void KFDQMTest::SubmitPacketCpQueue(int gpuNode) {
 TEST_F(KFDQMTest, SubmitPacketCpQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SubmitPacketCpQueue(gpuNode);
     }));
 
@@ -159,7 +159,7 @@ void KFDQMTest::AllCpQueues(int gpuNode) {
 TEST_F(KFDQMTest, AllCpQueues) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->AllCpQueues(gpuNode);
     }));
 
@@ -178,7 +178,7 @@ void KFDQMTest::CreateDestroySdmaQueue(int gpuNode) {
 TEST_F(KFDQMTest, CreateDestroySdmaQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->CreateDestroySdmaQueue(gpuNode);
     }));
 
@@ -202,7 +202,7 @@ void KFDQMTest::SubmitNopSdmaQueue(int gpuNode) {
 TEST_F(KFDQMTest, SubmitNopSdmaQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SubmitNopSdmaQueue(gpuNode);
     }));
 
@@ -231,7 +231,7 @@ void KFDQMTest::SubmitPacketSdmaQueue(int gpuNode) {
 TEST_F(KFDQMTest, SubmitPacketSdmaQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SubmitPacketSdmaQueue(gpuNode);
     }));
 
@@ -283,7 +283,7 @@ void KFDQMTest::AllSdmaQueues(int gpuNode) {
 TEST_F(KFDQMTest, AllSdmaQueues) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->AllSdmaQueues(gpuNode);
     }));
 
@@ -339,7 +339,7 @@ void KFDQMTest::AllXgmiSdmaQueues(int gpuNode) {
 TEST_F(KFDQMTest, AllXgmiSdmaQueues) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->AllXgmiSdmaQueues(gpuNode);
     }));
 
@@ -443,7 +443,7 @@ void KFDQMTest::AllQueues(int gpuNode) {
 TEST_F(KFDQMTest, AllQueues) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->AllQueues(gpuNode);
     }));
 
@@ -512,7 +512,7 @@ void KFDQMTest::SdmaConcurrentCopies(int gpuNode) {
 TEST_F(KFDQMTest, SdmaConcurrentCopies) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SdmaConcurrentCopies(gpuNode);
     }));
 
@@ -564,7 +564,7 @@ void KFDQMTest::DisableCpQueueByUpdateWithNullAddress(int gpuNode) {
 TEST_F(KFDQMTest, DisableCpQueueByUpdateWithNullAddress) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->DisableCpQueueByUpdateWithNullAddress(gpuNode);
     }));
 
@@ -609,7 +609,7 @@ void KFDQMTest::DisableSdmaQueueByUpdateWithNullAddress(int gpuNode) {
 TEST_F(KFDQMTest, DisableSdmaQueueByUpdateWithNullAddress) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->DisableSdmaQueueByUpdateWithNullAddress(gpuNode);
     }));
 
@@ -664,7 +664,7 @@ void KFDQMTest::DisableCpQueueByUpdateWithZeroPercentage(int gpuNode) {
 TEST_F(KFDQMTest, DisableCpQueueByUpdateWithZeroPercentage) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->DisableCpQueueByUpdateWithZeroPercentage(gpuNode);
     }));
 
@@ -710,7 +710,7 @@ void KFDQMTest::CreateQueueStressSingleThreaded(int gpuNode) {
 TEST_F(KFDQMTest, CreateQueueStressSingleThreaded) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->CreateQueueStressSingleThreaded(gpuNode);
     }));
 
@@ -770,7 +770,7 @@ void KFDQMTest::OverSubscribeCpQueues(int gpuNode) {
 TEST_F(KFDQMTest, OverSubscribeCpQueues) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->OverSubscribeCpQueues(gpuNode);
     }));
 
@@ -885,7 +885,7 @@ void KFDQMTest::BasicCuMaskingLinear(int gpuNode) {
 TEST_F(KFDQMTest, BasicCuMaskingLinear) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->BasicCuMaskingLinear(gpuNode);
     }));
 
@@ -1484,7 +1484,7 @@ void KFDQMTest::extendedCuMasking(int gpuNode) {
 TEST_F(KFDQMTest, ExtendedCuMasking) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->extendedCuMasking(gpuNode);
     }));
 
@@ -1580,7 +1580,7 @@ void KFDQMTest::BasicCuMaskingEven(int gpuNode) {
 TEST_F(KFDQMTest, BasicCuMaskingEven) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->BasicCuMaskingEven(gpuNode);
     }));
 
@@ -1686,7 +1686,7 @@ void KFDQMTest::QueuePriorityOnDifferentPipe(int gpuNode) {
 TEST_F(KFDQMTest, QueuePriorityOnDifferentPipe) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->QueuePriorityOnDifferentPipe(gpuNode);
     }));
 
@@ -1701,7 +1701,7 @@ void  KFDQMTest::QueuePriorityOnSamePipe(int gpuNode) {
 TEST_F(KFDQMTest, QueuePriorityOnSamePipe) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->QueuePriorityOnSamePipe(gpuNode);
     }));
 
@@ -1745,7 +1745,7 @@ void KFDQMTest::EmptyDispatch(int gpuNode) {
 TEST_F(KFDQMTest, EmptyDispatch) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->EmptyDispatch(gpuNode);
     }));
 
@@ -1775,7 +1775,7 @@ void KFDQMTest::SimpleWriteDispatch(int gpuNode) {
 TEST_F(KFDQMTest, SimpleWriteDispatch) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SimpleWriteDispatch(gpuNode);
     }));
 
@@ -1845,7 +1845,7 @@ void KFDQMTest::MultipleCpQueuesStressDispatch(int gpuNode) {
 TEST_F(KFDQMTest, MultipleCpQueuesStressDispatch) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->MultipleCpQueuesStressDispatch(gpuNode);
     }));
 
@@ -1892,7 +1892,7 @@ void KFDQMTest::CpuWriteCoherence(int gpuNode) {
 TEST_F(KFDQMTest, CpuWriteCoherence) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->CpuWriteCoherence(gpuNode);
     }));
 
@@ -1913,7 +1913,7 @@ void KFDQMTest::CreateAqlCpQueue(int gpuNode) {
 TEST_F(KFDQMTest, CreateAqlCpQueue) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->CreateAqlCpQueue(gpuNode);
     }));
 
@@ -2053,7 +2053,7 @@ void KFDQMTest::QueueLatency(int gpuNode) {
 TEST_F(KFDQMTest, QueueLatency) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->QueueLatency(gpuNode);
     }));
 
@@ -2091,7 +2091,7 @@ void KFDQMTest::CpQueueWraparound(int gpuNode) {
 TEST_F(KFDQMTest, CpQueueWraparound) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->CpQueueWraparound(gpuNode);
     }));
 
@@ -2136,7 +2136,7 @@ void KFDQMTest::SdmaQueueWraparound(int gpuNode) {
 TEST_F(KFDQMTest, SdmaQueueWraparound) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SdmaQueueWraparound(gpuNode);
     }));
 
@@ -2222,7 +2222,7 @@ void KFDQMTest::Atomics(int gpuNode) {
 TEST_F(KFDQMTest, Atomics) {
     TEST_START(TESTPROFILE_RUNALL);
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->Atomics(gpuNode);
     }));
 
@@ -2475,7 +2475,7 @@ void KFDQMTest::PM4EventInterrupt(int gpuNode) {
 TEST_F(KFDQMTest, PM4EventInterrupt) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->PM4EventInterrupt(gpuNode);
     }));
 
@@ -2585,7 +2585,7 @@ void KFDQMTest::SdmaEventInterrupt(int gpuNode) {
 TEST_F(KFDQMTest, SdmaEventInterrupt) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->SdmaEventInterrupt(gpuNode);
     }));
 
@@ -2680,7 +2680,7 @@ void KFDQMTest::GPUDoorbellWrite(int gpuNode) {
 TEST_F(KFDQMTest, GPUDoorbellWrite) {
     TEST_START(TESTPROFILE_RUNALL)
 
-    ASSERT_SUCCESS(KFDTestLaunchStd([this](int gpuNode) {
+    ASSERT_SUCCESS(KFDTestLaunch([this](int gpuNode) {
         this->GPUDoorbellWrite(gpuNode);
     }));
 
