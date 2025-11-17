@@ -3804,7 +3804,7 @@ Runtime::MappedHandleAllowedAgent::~MappedHandleAllowedAgent() {
 
 hsa_status_t Runtime::MappedHandleAllowedAgent::EnableAccess(hsa_access_permission_t perms) {
   if (targetAgent->device_type() == core::Agent::DeviceType::kAmdCpuDevice) {
-    if (!rocr::os::ProtectMemory(va, size, PermissionsToMemProt(perms), mappedHandle->drm_fd,
+    if (!rocr::os::MapMemory(va, size, PermissionsToMemProt(perms), mappedHandle->drm_fd,
                                 reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr))) {
       return HSA_STATUS_ERROR;
     }
@@ -3822,7 +3822,10 @@ hsa_status_t Runtime::MappedHandleAllowedAgent::RemoveAccess() {
   if (targetAgent->device_type() == core::Agent::DeviceType::kAmdCpuDevice) {
     if (permissions != HSA_ACCESS_PERMISSION_NONE) {
       hsa_access_permission_t perms = HSA_ACCESS_PERMISSION_NONE;
-      if (!rocr::os::ProtectMemory(va, size, PermissionsToMemProt(perms), mappedHandle->drm_fd,
+      if (!rocr::os::UnmapMemory(va, size)) {
+        return HSA_STATUS_ERROR;
+      }
+      if (!rocr::os::MapMemory(va, size, PermissionsToMemProt(perms), mappedHandle->drm_fd,
                                 reinterpret_cast<uint64_t>(mappedHandle->drm_cpu_addr))) {
         return HSA_STATUS_ERROR;
       }
@@ -3845,9 +3848,6 @@ Runtime::MappedHandle::MappedHandle(MemoryHandle *mem_handle, AddressHandle *add
   /* Create a CPU mapping with PROT_NONE */
   #if defined(__linux__)
   auto cpu_agent = static_cast<AMD::GpuAgent*>(agentOwner())->GetNearestCpuAgent();
-  #else // Use GPU agent for windows
-  auto cpu_agent = static_cast<AMD::GpuAgent*>(agentOwner());
-  #endif
 
   auto agentPermsIt = allowed_agents.emplace(std::piecewise_construct,
                        std::forward_as_tuple(cpu_agent),
@@ -3858,6 +3858,7 @@ Runtime::MappedHandle::MappedHandle(MemoryHandle *mem_handle, AddressHandle *add
   auto ret = agentPermsIt->second.EnableAccess(HSA_ACCESS_PERMISSION_NONE);
   if (ret != HSA_STATUS_SUCCESS)
     throw AMD::hsa_exception(ret, "Failed to create default CPU mapping");
+  #endif
 }
 
 // Note: VMemorySetAccessPerHandle should be called with &memory_lock_ held
