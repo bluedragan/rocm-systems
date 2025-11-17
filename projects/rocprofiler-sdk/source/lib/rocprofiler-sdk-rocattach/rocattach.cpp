@@ -59,6 +59,8 @@ struct status_string;
 ROCATTACH_STATUS_STRING(ROCATTACH_STATUS_SUCCESS, "Success")
 ROCATTACH_STATUS_STRING(ROCATTACH_STATUS_ERROR, "General error")
 ROCATTACH_STATUS_STRING(ROCATTACH_STATUS_ERROR_INVALID_ARGUMENT, "Invalid function argument")
+ROCATTACH_STATUS_STRING(ROCATTACH_STATUS_ERROR_NOT_SUPPORTED,
+                        "Attachment not supported on this platform")
 ROCATTACH_STATUS_STRING(ROCATTACH_STATUS_ERROR_PTRACE_ERROR, "General ptrace error")
 ROCATTACH_STATUS_STRING(ROCATTACH_STATUS_ERROR_PTRACE_OPERATION_NOT_PERMITTED,
                         "ptrace returned EPERM, operation not permitted")
@@ -369,6 +371,13 @@ rocattach_status_t
 rocattach_attach(int pid)
 {
     rocprofiler::rocattach::initialize_logging();
+
+    if(!rocprofiler::rocattach::PTraceSession::is_supported())
+    {
+        ROCP_ERROR << "[rocprofiler-sdk-attach] rocattach is not supported on this platform.";
+        return ROCATTACH_STATUS_ERROR_NOT_SUPPORTED;
+    }
+
     auto status = rocprofiler::rocattach::setup(pid);
     if(status != ROCATTACH_STATUS_SUCCESS)
     {
