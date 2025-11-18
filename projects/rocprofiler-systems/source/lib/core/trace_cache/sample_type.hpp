@@ -72,6 +72,31 @@ struct kernel_dispatch_sample : storage_parsed_type_base
     size_t stream_handle;
 };
 
+struct scratch_memory_sample : storage_parsed_type_base
+{
+    // Timing fields
+    uint64_t start_timestamp;
+    uint64_t end_timestamp;
+
+    // Identification fields
+    uint64_t thread_id;
+    uint64_t agent_id_handle;
+    uint64_t queue_id_handle;
+
+    // Operation details
+    int32_t  kind;
+    int32_t  operation;
+    int32_t  flags;
+    uint64_t allocation_size;
+
+    // Correlation fields
+    uint64_t correlation_id_internal;
+    uint64_t correlation_id_ancestor;
+
+    // Stream handle
+    size_t stream_handle;
+};
+
 struct memory_copy_sample : storage_parsed_type_base
 {
     // Timing fields
@@ -234,6 +259,7 @@ enum class entry_type : uint32_t
 #endif
     amd_smi_sample   = 0x0006,
     cpu_freq_sample  = 0x0007,
+    scratch_memory   = 0x0008,
     fragmented_space = 0xFFFF
 };
 }  // namespace trace_cache

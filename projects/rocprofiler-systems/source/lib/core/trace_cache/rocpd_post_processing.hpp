@@ -45,6 +45,7 @@ private:
                                        const info::process& process_info) const;
 
     postprocessing_callback get_kernel_dispatch_callback() const;
+    postprocessing_callback get_scratch_memory_callback() const;
     postprocessing_callback get_memory_copy_callback() const;
 #if(ROCPROFILER_VERSION >= 600)
     postprocessing_callback get_memory_allocate_callback() const;

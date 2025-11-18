@@ -306,6 +306,33 @@ CREATE TABLE IF NOT EXISTS
     );
 
 CREATE TABLE IF NOT EXISTS
+    `rocpd_scratch_memory{{uuid}}` (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "guid" TEXT DEFAULT "{{guid}}" NOT NULL,
+        "nid" INTEGER NOT NULL,
+        "pid" INTEGER NOT NULL,
+        "tid" INTEGER,
+        "agent_id" INTEGER NOT NULL,
+        "queue_id" INTEGER NOT NULL,
+        "stream_id" INTEGER NOT NULL,
+        "start" BIGINT NOT NULL,
+        "end" BIGINT NOT NULL,
+        "flags" INTEGER,
+        "allocation_size" INTEGER,
+        "region_name_id" INTEGER,
+        "event_id" INTEGER,
+        "extdata" JSONB DEFAULT "{}" NOT NULL,
+        FOREIGN KEY (nid) REFERENCES `rocpd_info_node{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (pid) REFERENCES `rocpd_info_process{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (tid) REFERENCES `rocpd_info_thread{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (agent_id) REFERENCES `rocpd_info_agent{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (queue_id) REFERENCES `rocpd_info_queue{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (stream_id) REFERENCES `rocpd_info_stream{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (region_name_id) REFERENCES `rocpd_string{{uuid}}` (id) ON UPDATE CASCADE,
+        FOREIGN KEY (event_id) REFERENCES `rocpd_event{{uuid}}` (id) ON UPDATE CASCADE
+    );
+
+CREATE TABLE IF NOT EXISTS
     `rocpd_memory_copy{{uuid}}` (
         "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "guid" TEXT DEFAULT "{{guid}}" NOT NULL,

@@ -124,6 +124,25 @@ storage_parser::consume_storage()
                 invoke_callbacks(header.type, _kernel_dispatch_sample);
                 break;
             }
+            case entry_type::scratch_memory:
+            {
+                scratch_memory_sample _scratch_memory_sample;
+                parse_data(sample.data(), _scratch_memory_sample.start_timestamp,
+                           _scratch_memory_sample.end_timestamp,
+                           _scratch_memory_sample.thread_id,
+                           _scratch_memory_sample.agent_id_handle,
+                           _scratch_memory_sample.queue_id_handle,
+                           _scratch_memory_sample.kind,
+                           _scratch_memory_sample.operation,
+                           _scratch_memory_sample.flags,
+                           _scratch_memory_sample.allocation_size,
+                           _scratch_memory_sample.correlation_id_internal,
+                           _scratch_memory_sample.correlation_id_ancestor,
+                           _scratch_memory_sample.stream_handle);
+
+                invoke_callbacks(header.type, _scratch_memory_sample);
+                break;
+            }
             case entry_type::memory_copy:
             {
                 memory_copy_sample _memory_copy_sample;

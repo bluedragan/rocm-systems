@@ -50,6 +50,9 @@ struct data_processor
         const char*, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t,
         uint64_t, uint64_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t,
         size_t, size_t, size_t, const char*)>;
+    using insert_scratch_memory_stmt        = std::function<void(
+        const char*, size_t, size_t, size_t, size_t, size_t, size_t, uint64_t, uint64_t,
+        int32_t, uint64_t, size_t, size_t, const char*)>;
     using insert_memory_copy_stmt           = std::function<void(
         const char*, size_t, size_t, size_t, uint64_t, uint64_t, size_t, size_t, size_t,
         size_t, size_t, size_t, size_t, size_t, size_t, size_t, const char*)>;
@@ -167,6 +170,12 @@ public:
                                 size_t grid_size_z, size_t region_name_id,
                                 size_t event_id, const char* extdata = "{}");
 
+    void insert_scratch_memory(size_t node_id, size_t process_id, size_t thread_id,
+                               size_t agent_id, size_t queue_id, size_t stream_id,
+                               uint64_t start, uint64_t end, int32_t flags,
+                               uint64_t alloc_size, size_t region_name_id,
+                               size_t event_id, const char* extdata = "{}");
+
     void insert_memory_copy(size_t node_id, size_t process_id, size_t thread_id,
                             uint64_t start, uint64_t end, size_t name_id,
                             size_t dst_agent_id, size_t dst_addr, size_t src_agent_id,
@@ -212,6 +221,7 @@ private:
     void initialize_sample_stmt();
     void initialize_region_stmt();
     void initialize_kernel_dispatch_stmt();
+    void initialize_scratch_memory_stmt();
     void initialize_memory_copy_stmt();
     void initialize_kernel_symbol_stmt();
     void initialize_code_object_stmt();
@@ -231,6 +241,7 @@ private:
     insert_sample_stmt                _insert_sample_statement;
     insert_region_stmt                _insert_region_statement;
     insert_kernel_dispatch_stmt       _insert_kernel_dispatch_statement;
+    insert_scratch_memory_stmt        _insert_scratch_memory_statement;
     insert_memory_copy_stmt           _insert_memory_copy_statement;
     insert_kernel_symbol_stmt         _insert_kernel_symbol_statement;
     insert_code_object_stmt           _insert_code_object_statement;

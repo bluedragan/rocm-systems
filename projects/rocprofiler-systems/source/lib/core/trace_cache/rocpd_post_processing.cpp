@@ -119,6 +119,47 @@ rocpd_post_processing::get_kernel_dispatch_callback() const
 }
 
 postprocessing_callback
+rocpd_post_processing::get_scratch_memory_callback() const
+{
+    return [&]([[maybe_unused]] const storage_parsed_type_base& parsed) {
+#if ROCPROFSYS_USE_ROCM > 0
+        auto _sms = static_cast<const struct scratch_memory_sample&>(parsed);
+
+        auto& data_processor = get_data_processor();
+        auto& agent_manager  = agent_manager::get_instance();
+        auto& n_info         = node_info::get_instance();
+        auto  process        = m_metadata.get_process_info();
+
+        auto _name = std::string{ m_metadata.get_buffer_name_info().at(
+            static_cast<rocprofiler_buffer_tracing_kind_t>(_sms.kind),
+            static_cast<rocprofiler_tracing_operation_t>(_sms.operation)) };
+        auto name_primary_key = data_processor.insert_string(_name.c_str());
+
+        auto agent_primary_key =
+            agent_manager.get_agent_by_handle(_sms.agent_id_handle).base_id;
+
+        auto thread_primary_key =
+            data_processor.map_thread_id_to_primary_key(_sms.thread_id);
+
+        auto category_primary_key = data_processor.insert_string(
+                trait::name<category::rocm_scratch_memory>::value);
+
+        auto stack_id        = _sms.correlation_id_internal;
+        auto parent_stack_id = _sms.correlation_id_ancestor;
+        auto correlation_id  = 0;
+
+        auto event_primary_key = data_processor.insert_event(
+            category_primary_key, stack_id, parent_stack_id, correlation_id);
+
+        data_processor.insert_scratch_memory(n_info.id, process.pid, thread_primary_key,
+            agent_primary_key, _sms.queue_id_handle, _sms.stream_handle,
+            _sms.start_timestamp, _sms.end_timestamp, _sms.flags, _sms.allocation_size,
+            name_primary_key, event_primary_key);
+#endif
+    };
+}
+
+postprocessing_callback
 rocpd_post_processing::get_memory_copy_callback() const
 {
     return [&]([[maybe_unused]] const storage_parsed_type_base& parsed) {
@@ -650,6 +691,8 @@ rocpd_post_processing::register_parser_callback([[maybe_unused]] storage_parser&
     parser.register_type_callback(entry_type::region, get_region_callback());
     parser.register_type_callback(entry_type::kernel_dispatch,
                                   get_kernel_dispatch_callback());
+    parser.register_type_callback(entry_type::scratch_memory,
+                                  get_scratch_memory_callback());
     parser.register_type_callback(entry_type::memory_copy, get_memory_copy_callback());
 #    if(ROCPROFILER_VERSION >= 600)
     parser.register_type_callback(entry_type::memory_alloc,

@@ -597,6 +597,26 @@ cache_kernel_dispatch(rocprofiler_buffer_tracing_kernel_dispatch_record_t* recor
 }
 
 void
+cache_scratch_memory(rocprofiler_buffer_tracing_scratch_memory_record_t* record, uint64_t stream_handle)
+{
+    trace_cache::get_metadata_registry().add_stream(stream_handle);
+    trace_cache::get_buffer_storage().store(
+        trace_cache::entry_type::scratch_memory,
+        record->start_timestamp,
+        record->end_timestamp,
+        record->thread_id,
+        record->agent_id.handle,
+        record->queue_id.handle,
+        static_cast<int32_t>(record->kind),
+        static_cast<int32_t>(record->operation),
+        static_cast<int32_t>(record->flags),
+        record->allocation_size,
+        record->correlation_id.internal,
+        get_parent_stack_id(record->correlation_id),
+        stream_handle);
+}
+
+void
 cache_memory_copy(rocprofiler_buffer_tracing_memory_copy_record_t* record, uint64_t stream_handle)
 {
     trace_cache::get_metadata_registry().add_stream(stream_handle);
@@ -1716,10 +1736,6 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
             }
             else if(header->kind == ROCPROFILER_BUFFER_TRACING_SCRATCH_MEMORY)
             {
-                // ToDo: add caching
-                // ToDo: shall we process stacked allocations?
-                // ToDo: do we need separate tracks for events?
-
                 auto* record =
                     static_cast<rocprofiler_buffer_tracing_scratch_memory_record_t*>(
                         header->payload);
@@ -1738,6 +1754,13 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                 {
                     // Scratch memory event is not associated with a HIP stream
                     _group_by_queue = true;
+                }
+
+                {
+                    cache_category<category::rocm_scratch_memory>();
+                    cache_add_thread_info(record->thread_id);
+                    // cache_add_track(track_name.c_str(), record->thread_id);
+                    cache_scratch_memory(record, _stream_id);
                 }
 
                 if(get_use_timemory())
