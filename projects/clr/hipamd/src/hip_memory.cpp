@@ -642,7 +642,7 @@ hipError_t ihipMemcpyCommand(amd::Command*& command, amd::Memory* dstMemory, amd
           helper.copyMetadata());
       break;
     case hipHostToHost:
-      assert("Unreachable case");
+      assert(false && "Unreachable case");
       break;
   }
   return MemcpyCommandHelper::checkCommand(command);
