@@ -33,6 +33,25 @@ locale settings.
    $ export LC_ALL=C.UTF-8
    $ export LANG=C.UTF-8
 
+Why does FP64 utilization exceed the theoretical peak?
+======================================================
+
+In rare circumstances, the GPU can co-issue FP64 instructions, which may result
+in observed FP64 performance values above the theoretical peak. This is expected
+hardware behavior and not a measurement error.
+
+This dual-issue capability can be observed through:
+
+* **ATT (Application Tracing Tool)**: Shows two VALU bars at the same cycle
+* **PC Sampling**: The ``dual_issue_valu`` field indicates when dual-issue occurs
+* **Hardware counters**: On MI350 and newer platforms, the ``SQ_ACTIVE_INST_VALU2``
+  counter specifically tracks dual-issue VALU activity
+
+When ROCm Compute Profiler detects FP64 utilization exceeding the theoretical peak,
+it displays a warning message indicating this behavior. On MI350 platforms, the tool
+additionally verifies the ``SQ_ACTIVE_INST_VALU2`` counter to confirm that dual-issue
+is indeed occurring.
+
 How can I SSH tunnel in MobaXterm?
 ==================================
 

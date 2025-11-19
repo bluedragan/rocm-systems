@@ -1014,6 +1014,73 @@ def eval_metric(
         eval_result = metric_evaluator.eval_expression(expr)
         dfs[df_id].loc[row_id, col] = eval_result
 
+    # Check for FP64 utilization exceeding theoretical peak
+    validate_fp64_dual_issue(dfs, dfs_type, sys_info, raw_pmc_df)
+
+
+def validate_fp64_dual_issue(
+    dfs: dict,
+    dfs_type: dict,
+    sys_info: pd.Series,
+    raw_pmc_df: Union[pd.DataFrame, dict],
+) -> None:
+    """
+    Check if FP64 metrics exceed theoretical peak and warn about dual-issue behavior.
+    For MI350 (gfx950), additionally verify SQ_ACTIVE_INST_VALU2 counter.
+    """
+    gpu_arch = sys_info.get("gpu_arch", "")
+
+    # FP64 metrics to check
+    fp64_metrics = ["VALU FLOPs (F64)", "MFMA FLOPs (F64)"]
+
+    for df_id, df in dfs.items():
+        if dfs_type[df_id] != "metric_table":
+            continue
+        if "Metric" not in df.columns or "Value" not in df.columns:
+            continue
+
+        has_peak_column = "Peak (Empirical)" in df.columns or "Peak" in df.columns
+        peak_col = "Peak (Empirical)" if "Peak (Empirical)" in df.columns else "Peak"
+
+        if not has_peak_column:
+            continue
+
+        for _, row in df.iterrows():
+            metric_name = row.get("Metric", "")
+            if metric_name not in fp64_metrics:
+                continue
+            try:
+                value = float(row.get("Value", 0))
+                peak = float(row.get(peak_col, 0))
+
+                if peak > 0 and value > peak:
+                    utilization_pct = (value / peak) * 100
+                    dual_issue_confirmed = False
+                    if gpu_arch == "gfx950":
+                        if isinstance(raw_pmc_df, dict) and "pmc_perf" in raw_pmc_df:
+                            pmc_df = raw_pmc_df["pmc_perf"]
+                            if "SQ_ACTIVE_INST_VALU2" in pmc_df.columns:
+                                valu2_sum = pmc_df["SQ_ACTIVE_INST_VALU2"].sum()
+                                if valu2_sum > 0:
+                                    dual_issue_confirmed = True
+
+                    warning_msg = (
+                        f"{metric_name} utilization ({utilization_pct:.1f}%) exceeds "
+                        f"theoretical peak. In rare circumstances, the GPU can co-issue "
+                        f"FP64 instructions, which may result in observed performance "
+                        f"above the theoretical peak. This is expected hardware behavior. "
+                        f"See https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/reference/faq.html#why-does-fp64-utilization-exceed-the-theoretical-peak"
+                    )
+
+                    if gpu_arch == "gfx950" and dual_issue_confirmed:
+                        warning_msg += " (SQ_ACTIVE_INST_VALU2 counter confirms dual-issue activity)"
+
+                    console_warning(warning_msg)
+
+            except (ValueError, TypeError):
+                # Skip if the value or peak cannot be converted to a float
+                continue
+
 
 def debug_evaluate_metrics(
     expr: str,
