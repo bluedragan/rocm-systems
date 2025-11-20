@@ -1302,12 +1302,6 @@ hsaKmtMemoryGetCpuAddr(
   HSAuint64* cpu_addr // OUT
 );
 
-HSAKMT_STATUS
-HSAKMTAPI
-hsaKmtResetMetadata(
-  HsaMemoryObjectHandle buf_handle
-);
-
 #ifdef __cplusplus
 }   //extern "C"
 #endif

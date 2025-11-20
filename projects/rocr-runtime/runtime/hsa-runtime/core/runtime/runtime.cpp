@@ -379,7 +379,7 @@ hsa_status_t Runtime::FreeMemory(void* ptr) {
     if (it->second.thunk_bo) {
 #if defined(__linux__)
       //clear metadata
-      HSAKMT_STATUS status = HSAKMT_CALL(hsaKmtResetMetadata(it->second.thunk_bo));
+      HSAKMT_STATUS status = HSAKMT_CALL(hsaKmtMemHandleFree(it->second.thunk_bo));
       if (status != HSAKMT_STATUS_SUCCESS) {
         return HSA_STATUS_ERROR;
       }
