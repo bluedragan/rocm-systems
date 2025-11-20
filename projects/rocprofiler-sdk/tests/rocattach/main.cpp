@@ -171,19 +171,20 @@ main(int argc, char** argv)
         close(pid1link[0]);
         close(pid2link[0]);
 
-
-        std::cout << "\n\n===== Test app 1 output PID " << pid1 << " =====\n\n" << pid1sstream.str() << std::endl;
-        std::cout << "\n\n===== Test app 2 output PID " << pid2 << " =====\n\n" << pid2sstream.str() << std::endl;
+        std::cout << "\n\n===== Test app 1 output PID " << pid1 << " =====\n\n"
+                  << pid1sstream.str() << std::endl;
+        std::cout << "\n\n===== Test app 2 output PID " << pid2 << " =====\n\n"
+                  << pid2sstream.str() << std::endl;
 
         // CMake pass regex search doesn't handle multiline searches, so main has to verify instead.
         const char c_tool_output[] = "Test C tool (priority=0) is using rocprofiler-sdk v";
-        const bool foundinpid1 = pid1sstream.str().find(c_tool_output) != std::string::npos;
-        const bool foundinpid2 = pid2sstream.str().find(c_tool_output) != std::string::npos;
-        if (!foundinpid1)
+        const bool foundinpid1     = pid1sstream.str().find(c_tool_output) != std::string::npos;
+        const bool foundinpid2     = pid2sstream.str().find(c_tool_output) != std::string::npos;
+        if(!foundinpid1)
         {
             std::cout << "Fail: Could not find C tool output in pid 1 output" << std::endl;
         }
-        if (!foundinpid2)
+        if(!foundinpid2)
         {
             std::cout << "Fail: Could not find C tool output in pid 2 output" << std::endl;
         }
