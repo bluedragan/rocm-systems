@@ -2319,7 +2319,9 @@ void VirtualGPU::submitVirtualMap(amd::VirtualMapCommand& vcmd) {
 
   // Create a view, since original base obj will map the whole memory and multimap cases wont work.
   amd::Memory* vaddr_sub_obj = nullptr;
+  Pal::IGpuMemory* phymem_igpu_mem = nullptr;
   size_t vaddr_offset = 0;
+  size_t phys_offset = 0;
   if (phys_mem_obj != nullptr) {
     constexpr bool kParent = false;
     vaddr_sub_obj = phys_mem_obj->getContext().devices()[0]->CreateVirtualBuffer(
@@ -2329,15 +2331,16 @@ void VirtualGPU::submitVirtualMap(amd::VirtualMapCommand& vcmd) {
     // Calculate the offset from the original pointer.
     vaddr_offset = (reinterpret_cast<address>(vaddr_sub_obj->getSvmPtr()) -
                     reinterpret_cast<address>(vaddr_base_obj->getSvmPtr()));
+
+    pal::Memory* phys_pal_mem = dev().getGpuMemory(phys_mem_obj);
+    phymem_igpu_mem = phys_pal_mem->iMem();
+    phys_offset = phys_pal_mem->virtualAddress() - phymem_igpu_mem->Desc().gpuVirtAddr;
   }
 
   // The imem() in the backend is shared between base and sub/view object.
   pal::Memory* vaddr_pal_mem = dev().getGpuMemory(vaddr_base_obj);
-  Pal::IGpuMemory* phymem_igpu_mem =
-      (phys_mem_obj == nullptr) ? nullptr : dev().getGpuMemory(phys_mem_obj)->iMem();
-
   Pal::VirtualMemoryRemapRange range{vaddr_pal_mem->iMem(), vaddr_offset,
-                                     phymem_igpu_mem,       0,
+                                     phymem_igpu_mem,       phys_offset,
                                      vcmd.size(),           Pal::VirtualGpuMemAccessMode::NoAccess};
 
   // Wait for previous operations before unmap
