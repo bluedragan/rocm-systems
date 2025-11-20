@@ -87,6 +87,9 @@ add_subdirectory(hip-host-tracing)
 # rocpd validation tests
 add_subdirectory(rocpd)
 
+# rocattach validation tests
+add_subdirectory(rocattach)
+
 # rocprofv3 validation tests
 add_subdirectory(rocprofv3)
 
