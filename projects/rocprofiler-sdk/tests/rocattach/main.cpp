@@ -111,6 +111,7 @@ main(int argc, char** argv)
         close(pid2link[1]);
 
         const char* extra_env[] = {
+            "ROCP_TOOL_ATTACH=1",
             "ROCPROFILER_REGISTER_LOG_LEVEL=trace",
             "ROCPROFILER_LOG_LEVEL=trace",
             nullptr,  // array is null terminated per exec() convention
