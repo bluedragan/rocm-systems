@@ -27,7 +27,7 @@ endif()
 
 if(PkgConfig_FOUND AND simde_FOUND)
     message(STATUS "Found SIMDe via pkg-config")
-    set(SIMDE_TARGET PkgConfig::SIMDE)
+    set(SIMDE_TARGET PkgConfig::simde)
 else()
     message(STATUS "SIMDe not found via pkg-config. Falling back to find_path...")
 
