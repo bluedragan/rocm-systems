@@ -18,7 +18,8 @@ add_executable(rocattach-parallel-attach-test)
 target_sources(rocattach-parallel-attach-test PRIVATE main.cpp)
 target_link_libraries(
     rocattach-parallel-attach-test
-    PRIVATE rocprofiler-sdk::rocprofiler-sdk rocprofiler-sdk::tests-build-flags
+    PRIVATE rocprofiler-sdk::rocprofiler-sdk
+            rocprofiler-sdk::tests-build-flags
             rocprofiler-sdk::tests-common-library
             rocprofiler-sdk::rocprofiler-sdk-shared-library
             rocprofiler-sdk::rocprofiler-sdk-rocattach-shared-library)

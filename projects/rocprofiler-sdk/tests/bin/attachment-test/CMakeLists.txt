@@ -46,4 +46,7 @@ target_compile_options(attachment-test PRIVATE -W -Wall -Wextra -Wpedantic -Wsha
                                                -Werror)
 
 target_link_libraries(
-    attachment-test PRIVATE Threads::Threads rocprofiler-sdk-roctx::rocprofiler-sdk-roctx)
+    attachment-test
+    PRIVATE Threads::Threads rocprofiler-sdk-roctx::rocprofiler-sdk-roctx
+            rocprofiler-sdk::rocprofiler-sdk-shared-library
+            rocprofiler-sdk::rocprofiler-sdk-attach-shared-library)
