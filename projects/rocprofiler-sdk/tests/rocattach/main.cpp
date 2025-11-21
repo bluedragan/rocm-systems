@@ -110,15 +110,9 @@ main(int argc, char** argv)
         close(pid2link[0]);
         close(pid2link[1]);
 
-        const char* extra_env[] = {
-            "ROCP_TOOL_ATTACH=1",
-            "ROCPROFILER_REGISTER_LOG_LEVEL=trace",
-            "ROCPROFILER_LOG_LEVEL=trace",
-            nullptr,  // array is null terminated per exec() convention
-        };
         // Child process
         std::cout << "child executing " << argv[1] << std::endl;
-        int ret = execle(argv[1], argv[1], nullptr, extra_env);
+        int ret = execl(argv[1], argv[1], nullptr);
         if(ret == -1)
         {
             std::cout << "error in execl(), errno=" << errno << std::endl;

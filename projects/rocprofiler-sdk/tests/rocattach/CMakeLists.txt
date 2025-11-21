@@ -21,12 +21,17 @@ target_link_libraries(
     PRIVATE rocprofiler-sdk::rocprofiler-sdk
             rocprofiler-sdk::tests-build-flags
             rocprofiler-sdk::tests-common-library
-            rocprofiler-sdk::rocprofiler-sdk-shared-library
             rocprofiler-sdk::rocprofiler-sdk-rocattach-shared-library)
 
 add_test(NAME rocattach-parallel-attach-test-execute
          COMMAND $<TARGET_FILE:rocattach-parallel-attach-test>
                  $<TARGET_FILE:attachment-test> $<TARGET_FILE:rocprofiler-sdk-c-tool>)
+
+set(rocattach-test-env
+    "${ROCPROFILER_MEMCHECK_PRELOAD_ENV}"
+    "ROCP_TOOL_ATTACH=1"
+    "ROCPROFILER_REGISTER_LOG_LEVEL=trace"
+    "ROCPROFILER_LOG_LEVEL=trace")
 
 set_tests_properties(
     rocattach-parallel-attach-test-execute
@@ -35,7 +40,7 @@ set_tests_properties(
                LABELS
                "integration-tests"
                ENVIRONMENT
-               "${ROCPROFILER_MEMCHECK_PRELOAD_ENV}"
+               "${rocattach-test-env}"
                # This regex search doesn't handle multiline searches, so main has to
                # verify instead.
                PASS_REGULAR_EXPRESSION
