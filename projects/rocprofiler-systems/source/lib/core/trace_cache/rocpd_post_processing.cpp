@@ -24,6 +24,7 @@
 #include "agent_manager.hpp"
 #include "common.hpp"
 #include "config.hpp"
+#include "core/rocpd/json.hpp"
 #include "debug.hpp"
 #include "library/thread_info.hpp"
 #include "node_info.hpp"
@@ -66,6 +67,50 @@ get_handle_from_code_object(
     return code_object.rocp_agent.handle;
 #    endif
 }
+#endif
+
+#if ROCPROFSYS_USE_ROCM > 0
+std::pair<std::string, std::string>
+parse_memory_operation_name(std::string_view memory_operation_name)
+{
+    constexpr auto MEMORY_PREFIX  = std::string_view{ "MEMORY_ALLOCATION_" };
+    constexpr auto SCRATCH_PREFIX = std::string_view{ "SCRATCH_MEMORY_" };
+    constexpr auto VMEM_PREFIX    = std::string_view{ "VMEM_" };
+    constexpr auto ASYNC_PREFIX   = std::string_view{ "ASYNC_" };
+
+    std::string _type;
+    std::string _level;
+
+    if(memory_operation_name.find(MEMORY_PREFIX) == 0)
+    {
+        _type = memory_operation_name.substr(MEMORY_PREFIX.length());
+        if(_type.find(VMEM_PREFIX) == 0)
+        {
+            _type  = _type.substr(VMEM_PREFIX.length());
+            _level = "VIRTUAL";
+        }
+        else
+        {
+            _level = "REAL";
+        }
+    }
+    else if(memory_operation_name.find(SCRATCH_PREFIX) == 0)
+    {
+        _type  = memory_operation_name.substr(SCRATCH_PREFIX.length());
+        _level = "SCRATCH";
+        if(memory_operation_name.find(ASYNC_PREFIX) == 0)
+        {
+            _type = memory_operation_name.substr(ASYNC_PREFIX.length());  // RECLAIM
+        }
+    }
+
+    if(_type == "ALLOCATE")
+    {
+        _type = "ALLOC";
+    }
+
+    return std::make_pair(_type, _level);
+};
 #endif
 }  // namespace
 
@@ -147,14 +192,30 @@ rocpd_post_processing::get_scratch_memory_callback() const
         auto stack_id        = _sms.correlation_id_internal;
         auto parent_stack_id = _sms.correlation_id_ancestor;
         auto correlation_id  = 0;
-
         auto event_primary_key = data_processor.insert_event(
             category_primary_key, stack_id, parent_stack_id, correlation_id);
 
+        // remove this call
         data_processor.insert_scratch_memory(n_info.id, process.pid, thread_primary_key,
             agent_primary_key, _sms.queue_id_handle, _sms.stream_handle,
             _sms.start_timestamp, _sms.end_timestamp, _sms.flags, _sms.allocation_size,
             name_primary_key, event_primary_key);
+
+        auto address_value = 0;  // There is no address info in scratch memory sample
+
+        auto [type, level] = parse_memory_operation_name(_name);
+
+        // auto extdata = "{\"flags\":\"" + std::to_string(_sms.flags) + "\"}";
+
+        auto extdata_json = ::rocpd::json::create();
+        extdata_json->set("flags", _sms.flags);
+        // auto extdata_str = extdata_json->to_string();
+
+        data_processor.insert_memory_alloc(n_info.id, process.pid, thread_primary_key,
+            agent_primary_key, type.c_str(), level.c_str(), _sms.start_timestamp,
+            _sms.end_timestamp, address_value, _sms.allocation_size,
+            _sms.queue_id_handle, _sms.stream_handle, event_primary_key,
+            extdata_json->to_string().c_str());
 #endif
     };
 }
@@ -209,48 +270,6 @@ rocpd_post_processing::get_memory_copy_callback() const
 postprocessing_callback
 rocpd_post_processing::get_memory_allocate_callback() const
 {
-#    if ROCPROFSYS_USE_ROCM > 0
-    auto memtype_to_db =
-        [](std::string_view memory_type) -> std::pair<std::string, std::string> {
-        constexpr auto MEMORY_PREFIX  = std::string_view{ "MEMORY_ALLOCATION_" };
-        constexpr auto SCRATCH_PREFIX = std::string_view{ "SCRATCH_MEMORY_" };
-        constexpr auto VMEM_PREFIX    = std::string_view{ "VMEM_" };
-        constexpr auto ASYNC_PREFIX   = std::string_view{ "ASYNC_" };
-
-        std::string _type;
-        std::string _level;
-        if(memory_type.find(MEMORY_PREFIX) == 0)
-        {
-            _type = memory_type.substr(MEMORY_PREFIX.length());
-            if(_type.find(VMEM_PREFIX) == 0)
-            {
-                _type  = _type.substr(VMEM_PREFIX.length());
-                _level = "VIRTUAL";
-            }
-            else
-            {
-                _level = "REAL";
-            }
-        }
-        else if(memory_type.find(SCRATCH_PREFIX) == 0)
-        {
-            _type  = memory_type.substr(SCRATCH_PREFIX.length());
-            _level = "SCRATCH";
-            if(memory_type.find(ASYNC_PREFIX) == 0)
-            {
-                _type = memory_type.substr(ASYNC_PREFIX.length());  // RECLAIM
-            }
-        }
-
-        if(_type == "ALLOCATE")
-        {
-            _type = "ALLOC";
-        }
-
-        return std::make_pair(_type, _level);
-    };
-#    endif
-
     return [&]([[maybe_unused]] const storage_parsed_type_base& parsed) {
 #    if ROCPROFSYS_USE_ROCM > 0
         auto  _mas           = static_cast<const struct memory_allocate_sample&>(parsed);
@@ -273,7 +292,7 @@ rocpd_post_processing::get_memory_allocate_callback() const
                 static_cast<rocprofiler_buffer_tracing_kind_t>(_mas.kind),
                 static_cast<rocprofiler_tracing_operation_t>(_mas.operation));
 
-            auto [type, level] = memtype_to_db(_name);
+            auto [type, level] = parse_memory_operation_name(_name);
 
             auto stack_id        = _mas.correlation_id_internal;
             auto parent_stack_id = _mas.correlation_id_ancestor;
