@@ -25,11 +25,17 @@
 
 import os
 import subprocess
+import sys
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
+ROOT = os.path.dirname(os.path.dirname(__file__))
+SRC = os.path.join(ROOT, "src")
+if SRC not in sys.path:
+    sys.path.insert(0, SRC)
 
 rocprof_compute = SourceFileLoader(
     "rocprof-compute", "src/rocprof-compute"
@@ -45,12 +51,13 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        "--rocprofiler-sdk-library-path",
+        "--rocprofiler-sdk-tool-path",
         type=str,
         default=str(
-            Path(os.getenv("ROCM_PATH", "/opt/rocm")) / "lib/librocprofiler-sdk.so"
+            Path(os.getenv("ROCM_PATH", "/opt/rocm"))
+            / "lib/rocprofiler-sdk/librocprofiler-sdk-tool.so"
         ),
-        help="Path to the rocprofiler-sdk library",
+        help="Path to the rocprofiler-sdk tool",
     )
 
 
@@ -65,11 +72,11 @@ def binary_handler_profile_rocprof_compute(request):
         app_name="app_1",
         attach_detach_para=None,
     ):
-        if request.config.getoption("--rocprofiler-sdk-library-path"):
+        if request.config.getoption("--rocprofiler-sdk-tool-path"):
             options.extend(
                 [
-                    "--rocprofiler-sdk-library-path",
-                    request.config.getoption("--rocprofiler-sdk-library-path"),
+                    "--rocprofiler-sdk-tool-path",
+                    request.config.getoption("--rocprofiler-sdk-tool-path"),
                 ],
             )
         if request.config.getoption("--call-binary"):
@@ -108,7 +115,13 @@ def binary_handler_profile_rocprof_compute(request):
                 assert process.returncode == 0
             return process.returncode
         else:
-            baseline_opts = ["rocprof-compute", "profile", "-n", app_name, "-VVV"]
+            baseline_opts = [
+                "install/bin/rocprof-compute",
+                "profile",
+                "-n",
+                app_name,
+                "-VVV",
+            ]
             if not roof:
                 baseline_opts.append("--no-roof")
 

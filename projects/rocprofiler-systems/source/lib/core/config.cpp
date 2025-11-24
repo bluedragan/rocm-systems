@@ -623,11 +623,12 @@ configure_settings(bool _init)
         "the same signal (SIGRTMIN + 1)",
         SIGRTMIN + 1, "sampling", "advanced");
 
-    ROCPROFSYS_CONFIG_SETTING(std::string, "ROCPROFSYS_SAMPLING_OVERFLOW_EVENT",
-                              "Metric for overflow sampling",
-                              std::string{ "perf::PERF_COUNT_HW_CACHE_REFERENCES" },
-                              "sampling", "hardware_counters")
-        ->set_choices(perf::get_config_choices());
+    ROCPROFSYS_CONFIG_SETTING(
+        std::string, "ROCPROFSYS_SAMPLING_OVERFLOW_EVENT",
+        "Metric for overflow sampling. Defaults to perf::PERF_COUNT_HW_CACHE_REFERENCES. "
+        "For full list of events see: rocprof-sys-avail -H -c CPU -r overflow",
+        std::string{ "perf::PERF_COUNT_HW_CACHE_REFERENCES" }, "sampling",
+        "hardware_counters");
 
     rocprofiler_sdk::config_settings(_config);
     amd_smi::config_settings(_config);
@@ -644,6 +645,10 @@ configure_settings(bool _init)
                               "Combine Perfetto traces. If not explicitly set, it will "
                               "default to the value of ROCPROFSYS_COLLAPSE_PROCESSES",
                               false, "perfetto", "data", "advanced");
+
+    ROCPROFSYS_CONFIG_SETTING(uint32_t, "ROCPROFSYS_PERFETTO_FLUSH_PERIOD_MS",
+                              "Set Perfetto flush period (in ms)", uint32_t{ 10000 },
+                              "perfetto", "data");
 
     ROCPROFSYS_CONFIG_SETTING(
         std::string, "ROCPROFSYS_PERFETTO_FILL_POLICY",
@@ -938,12 +943,18 @@ configure_settings(bool _init)
     {
         auto _papi_events = _config->find("ROCPROFSYS_PAPI_EVENTS");
         _add_rocprofsys_category(_papi_events);
-        std::vector<std::string> _papi_choices = {};
-        for(auto itr : tim::papi::available_events_info())
+        // Only enumerate PAPI events if the user has specified them
+        if(_papi_events->second->get_config_updated() ||
+           !_config->get_papi_events().empty())
         {
-            if(itr.available()) _papi_choices.emplace_back(itr.symbol());
+            std::vector<std::string> _papi_choices = {};
+            for(const auto& itr :
+                tim::papi::available_events_info({ "perf_event_uncore" }))
+            {
+                if(itr.available()) _papi_choices.emplace_back(itr.symbol());
+            }
+            _papi_events->second->set_choices(_papi_choices);
         }
-        _papi_events->second->set_choices(_papi_choices);
     }
 #else
     _config->find("ROCPROFSYS_PAPI_EVENTS")->second->set_hidden(true);
@@ -1997,6 +2008,13 @@ get_perfetto_buffer_size()
     return static_cast<tim::tsettings<size_t>&>(*_v->second).get();
 }
 
+uint32_t
+get_perfetto_flush_period()
+{
+    static auto _v = get_config()->find("ROCPROFSYS_PERFETTO_FLUSH_PERIOD_MS");
+    return static_cast<tim::tsettings<uint32_t>&>(*_v->second).get();
+}
+
 bool
 get_perfetto_combined_traces()
 {
@@ -2354,14 +2372,13 @@ get_tmpdir()
 }
 
 std::string
-get_database_absolute_path(std::string_view database_name)
+get_database_absolute_path(std::string_view database_name, std::string_view suffix)
 {
     const auto* _existing_path = std::getenv("ROCPROFSYS_DATABASE_DIR");
     auto        _dir = _existing_path ? std::string{ _existing_path } : std::string{};
     auto        _ext = std::string{ "db" };
 
-    auto _cfg = settings::compose_filename_config{ settings::use_output_suffix(),
-                                                   settings::default_process_suffix(),
+    auto _cfg = settings::compose_filename_config{ settings::use_output_suffix(), suffix,
                                                    false, _dir };
 
     const auto get_path = [](const std::string& path) {
@@ -2370,8 +2387,9 @@ get_database_absolute_path(std::string_view database_name)
                                                  : std::string{};
     };
 
-    auto _val = settings::compose_output_filename(std::string(database_name), _ext, _cfg);
-    _dir      = get_path(_val);
+    auto _val =
+        settings::compose_output_filename(std::string{ database_name }, _ext, _cfg);
+    _dir = get_path(_val);
 
     setenv("ROCPROFSYS_DATABASE_DIR", _dir.c_str(), 1);
 
