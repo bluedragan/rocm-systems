@@ -40,7 +40,6 @@ data_processor::data_processor()
     initialize_sample_stmt();
     initialize_region_stmt();
     initialize_kernel_dispatch_stmt();
-    initialize_scratch_memory_stmt();
     initialize_memory_copy_stmt();
     initialize_code_object_stmt();
     initialize_kernel_symbol_stmt();
@@ -334,24 +333,6 @@ data_processor::initialize_kernel_dispatch_stmt()
 }
 
 void
-data_processor::initialize_scratch_memory_stmt()
-{
-    data_storage::queries::table_insert_query query_builder;
-    auto query = query_builder.set_table_name("rocpd_scratch_memory_" + _upid)
-                     .set_columns("guid", "nid", "pid", "tid", "agent_id", "queue_id",
-                                  "stream_id", "start", "end", "flags", "allocation_size",
-                                  "region_name_id", "event_id", "extdata")
-                     .set_values('?', '?', '?', '?', '?', '?', '?',
-                                 '?', '?', '?', '?', '?', '?', '?')
-                     .get_query_string();
-    _insert_scratch_memory_statement =
-        data_storage::database::get_instance()
-            .create_statement_executor<const char*, size_t, size_t, size_t, size_t,
-                                       size_t, size_t, uint64_t, uint64_t, int32_t,
-                                       uint64_t, size_t, size_t, const char*>(query);
-}
-
-void
 data_processor::initialize_memory_copy_stmt()
 {
     data_storage::queries::table_insert_query query_builder;
@@ -542,19 +523,6 @@ data_processor::insert_kernel_dispatch(
         queue_id, stream_id, start, end, private_segment_size, group_segment_size,
         workgroup_size_x, workgroup_size_y, workgroup_size_z, grid_size_x, grid_size_y,
         grid_size_z, region_name_id, event_id, extdata);
-}
-
-void
-data_processor::insert_scratch_memory(size_t node_id, size_t process_id,
-                                      size_t thread_id, size_t agent_id, size_t queue_id,
-                                      size_t stream_id, uint64_t start, uint64_t end,
-                                      int32_t flags, uint64_t allocation_size,
-                                      size_t region_name_id, size_t event_id,
-                                      const char* extdata)
-{
-    _insert_scratch_memory_statement(_upid.c_str(), node_id, process_id, thread_id,
-                                     agent_id, queue_id, stream_id, start, end, flags,
-                                     allocation_size, region_name_id, event_id, extdata);
 }
 
 void

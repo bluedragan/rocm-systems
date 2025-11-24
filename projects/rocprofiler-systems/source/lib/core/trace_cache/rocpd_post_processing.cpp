@@ -178,7 +178,6 @@ rocpd_post_processing::get_scratch_memory_callback() const
         auto _name = std::string{ m_metadata.get_buffer_name_info().at(
             static_cast<rocprofiler_buffer_tracing_kind_t>(_sms.kind),
             static_cast<rocprofiler_tracing_operation_t>(_sms.operation)) };
-        auto name_primary_key = data_processor.insert_string(_name.c_str());
 
         auto agent_primary_key =
             agent_manager.get_agent_by_handle(_sms.agent_id_handle).base_id;
@@ -194,22 +193,12 @@ rocpd_post_processing::get_scratch_memory_callback() const
         auto correlation_id  = 0;
         auto event_primary_key = data_processor.insert_event(
             category_primary_key, stack_id, parent_stack_id, correlation_id);
-
-        // remove this call
-        data_processor.insert_scratch_memory(n_info.id, process.pid, thread_primary_key,
-            agent_primary_key, _sms.queue_id_handle, _sms.stream_handle,
-            _sms.start_timestamp, _sms.end_timestamp, _sms.flags, _sms.allocation_size,
-            name_primary_key, event_primary_key);
-
-        auto address_value = 0;  // There is no address info in scratch memory sample
+        auto address_value = 0;
 
         auto [type, level] = parse_memory_operation_name(_name);
 
-        // auto extdata = "{\"flags\":\"" + std::to_string(_sms.flags) + "\"}";
-
         auto extdata_json = ::rocpd::json::create();
         extdata_json->set("flags", _sms.flags);
-        // auto extdata_str = extdata_json->to_string();
 
         data_processor.insert_memory_alloc(n_info.id, process.pid, thread_primary_key,
             agent_primary_key, type.c_str(), level.c_str(), _sms.start_timestamp,
