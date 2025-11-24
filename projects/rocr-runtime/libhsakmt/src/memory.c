@@ -969,7 +969,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtHandleImport(const HsaExternalHandleDesc* import_d
 		uint32_t metadata = info.metadata.umd_metadata[0];
 		uint32_t size_metadata = info.metadata.size_metadata;
 		if (flags->ui32.UpdateMetadata && !flags->ui32.SysMem) {
-			if (!!size_metadata) { // return pre-exisiting metadata
+			if (!!size_metadata) { // return pre-existing metadata
 				import_res->metadata = (HSAuint32)metadata;
 			} else {
     			struct amdgpu_bo_metadata buf_info = {0};
@@ -988,7 +988,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtHandleImport(const HsaExternalHandleDesc* import_d
 	return HSAKMT_STATUS_SUCCESS;
 }
 
-HSAuint64 hsaKmtDrmPerm(HsaMemoryMapFlags flags) {
+HSAuint64 MapDrmPerm(HsaMemoryMapFlags flags) {
   switch (flags) {
   case HSA_MEMORY_ACCESS_RO:
     return AMDGPU_VM_PAGE_READABLE;
@@ -1013,7 +1013,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtMemoryVaMap(HsaMemoryObjectHandle Handle,
 	}
 
     int ret = amdgpu_bo_va_op(drmhandle, offset, size, addr,
-                      		  hsaKmtDrmPerm(flags), AMDGPU_VA_OP_MAP);
+                      		  MapDrmPerm(flags), AMDGPU_VA_OP_MAP);
 	if (ret) {
 		return HSAKMT_STATUS_ERROR;
 	}
@@ -1036,7 +1036,7 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtMemoryVaUnmap(HsaMemoryObjectHandle Handle,
 		return HSAKMT_STATUS_ERROR;
 	}
 
-	return HSAKMT_STATUS_SUCCESS;	
+	return HSAKMT_STATUS_SUCCESS;
 }
 
 HSAKMT_STATUS HSAKMTAPI hsaKmtMemHandleFree(HsaMemoryObjectHandle Handle)
