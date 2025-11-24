@@ -45,8 +45,9 @@ import traceback
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
+from functools import wraps
 from pathlib import Path
-from typing import Any, Optional, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 
 import pandas as pd
 import yaml
@@ -1870,3 +1871,20 @@ def get_panel_alias() -> dict[str, str]:
     return {
         panel["panel_alias"]: str(panel["panel_id"]) for panel in panel_yaml["panels"]
     }
+
+
+def benchmark(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator to benchmark a function's execution time."""
+
+    @wraps(func)
+    def wrapper_benchmark(*args: Any, **kwargs: Any) -> Callable[..., Any]:
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
+        console_log(
+            f"Function '{func.__name__}' executed in {format_time(elapsed_time)}."
+        )
+        return result
+
+    return wrapper_benchmark
