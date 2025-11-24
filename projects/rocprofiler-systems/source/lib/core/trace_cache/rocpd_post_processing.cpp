@@ -191,9 +191,10 @@ rocpd_post_processing::get_scratch_memory_callback() const
         auto stack_id        = _sms.correlation_id_internal;
         auto parent_stack_id = _sms.correlation_id_ancestor;
         auto correlation_id  = 0;
+        auto address_value = 0;
+
         auto event_primary_key = data_processor.insert_event(
             category_primary_key, stack_id, parent_stack_id, correlation_id);
-        auto address_value = 0;
 
         auto [type, level] = parse_memory_operation_name(_name);
 
