@@ -32,19 +32,17 @@
 
 namespace hip {
 
-// Get the CPU ID of the current thread
-static int getCurrentNumaId() {
+// Get the NUMA node ID of the current thread
+static int getCurrentNumaNode() {
 #if defined(__linux__)
   int cpu = sched_getcpu();
   if (cpu < 0) {
     return hipCpuDeviceId;
   }
-
   int numa_node = numa_node_of_cpu(cpu);
   if (numa_node < 0) {
     return hipCpuDeviceId;
   }
-
   return numa_node;
 #else
   return hipCpuDeviceId;
@@ -336,13 +334,13 @@ hipError_t ihipMemPrefetchAsync(const void* dev_ptr, size_t count, hipMemLocatio
 
   // Determine the target device index:
   //  - for host-prefetch, use default CPU agent
-  //  - for host-current, query the current thread's CPU ID
+  //  - for host-current, query the current thread's NUMA node ID
   //  - for host-NUMA or device-prefetch, use the provided id
   int targetDevice;
   if (isHost) {
     targetDevice = hipCpuDeviceId;
   } else if (isHostCurrent) {
-    targetDevice = getCurrentNumaId();
+    targetDevice = getCurrentNumaNode();
   } else {
     targetDevice = location.id;
   }
@@ -415,7 +413,7 @@ hipError_t ihipMemAdvise(const void* dev_ptr, size_t count, hipMemoryAdvise advi
       use_cpu = true;
       break;
     case hipMemLocationTypeHostNumaCurrent:
-      targetDevice = getCurrentNumaId();  // Query current NUMA node ID
+      targetDevice = getCurrentNumaNode();
       use_cpu = true;
       break;
     default:
