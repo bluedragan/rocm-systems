@@ -972,6 +972,60 @@ constexpr __hip_internal::uint16_t bf16_half_sig_bit = 0x0040U;
 constexpr __hip_internal::uint32_t float_half_sig_bit = 0x00400000U;
 constexpr __hip_internal::uint64_t double_half_sig_bit = 0x0008000000000000U;
 
+__FP8_HOST_DEVICE_STATIC__ float __internal_cvt_e8m0_to_float(const __hip_fp8_storage_t x) {
+  union {
+    float as_float;
+    __hip_internal::uint32_t as_int;
+  } ret;
+
+  switch (x) {
+    case 0x00U:
+      return float_half_sig_bit;
+    case hip_detail::e8m0_NaN:
+      return hip_detail::float_NaN;
+    default:
+      ret.as_int = static_cast<__hip_internal::uint32_t>(x << 23)
+  };
+  return ret.as_float;
+}
+}
+
+__FP8_HOST_DEVICE_STATIC__ double __internal_cvt_e8m0_to_double(const __hip_fp8_storage_t x) {
+  union {
+    double as_double;
+    __hip_internal::uint64_t as_int;
+  } ret;
+
+  switch (x) {
+    case 0x00U:
+      return double_half_sig_bit;
+    case hip_detail::e8m0_NaN:
+      return hip_detail::double_NaN;
+    default:
+      // shift due to bias difference between double and single precision exponents
+      ret.as_int = static_cast<__hip_internal::uint64_t>(x << 52) + 0x0380U;
+      return ret.as_double;
+  }
+}
+
+// Converts e8m0 to arbitrary integer type T
+// Uses conversion to float for bounds check
+// Double round not a concern as e8m0 is just the f32 mantissa
+template <typename T_int>
+inline T_int internal_cvt_e8m0_to_int_type(__hip_fp8_storage_t x) {
+  float f = __internal_cvt_e8m0_to_float(__x);
+  if (__x == hip_detail::e8m0_NaN) {
+    return 0;
+  }
+  if (f > numeric_limits<T_int>::max()) {
+    return numeric_limits<T_int>::max();
+  }
+  if (f < numeric_limits<T_int>::lowest()) {
+    return numeric_limits<T_int>::lowest();
+  }
+  return static_cast<T_int>(f);
+}
+
 }  // namespace hip_detail
 
 __FP8_HOST_DEVICE_STATIC__ __hip_fp8_storage_t __hip_cvt_double_to_e8m0(
@@ -1059,13 +1113,97 @@ __FP8_HOST_DEVICE_STATIC__ __hip_bfloat16_raw
 __hip_cvt_e8m0_to_bf16raw(const __hip_fp8_storage_t x) {
   switch (x) {
     case 0x00U:
-      return __hip_bfloat16_raw{0x0040U};
+      return __hip_bfloat16_raw{bf16_half_sig_bit};
     case hip_detail::e8m0_NaN:
       return __hip_bfloat16_raw{hip_detail::bf16_NaN};
     default:
       return __hip_bfloat16_raw{static_cast<unsigned short>(x << 7)};
   }
 }
+
+struct __hip_fp8_e8m0 {
+  __hip_fp8_storage_t __x;  //! raw storage of fp8 number
+  constexpr static __hip_saturation_t __default_saturation = __HIP_SATFINITE;
+  constexpr static hipRoundMode __default_interpret = hipRoundPosInf;
+
+  __nv_fp8_e8m0() = default;
+  __FP8_HOST_DEVICE__ inline explicit __hip_fp8_e8m0(const __half f) {
+    float intermediate_float = half_to_float(f);
+    __x = __hip_cvt_float_to_e8m0(f, __HIP_SATFINITE, hipRoundPosInf);
+  }
+  __FP8_HOST_DEVICE__ inline explicit __hip_fp8_e8m0(const __amd_bfloat16 f) {
+    __x = __hip_cvt_bfloat16raw_to_e8m0(f, __HIP_SATFINITE, hipRoundPosInf);
+  }
+  __FP8_HOST_DEVICE__ inline explicit __hip_fp8_e8m0(const double f) {
+    __x = __hip_cvt_double_to_e8m0(f, __HIP_SATFINITE, hipRoundPosInf);
+  }
+  __FP8_HOST_DEVICE__ inline explicit __hip_fp8_e8m0(const float f) {
+    __x = __hip_cvt_float_to_e8m0(f, __HIP_SATFINITE, hipRoundPosInf);
+  }
+  __FP8_HOST_DEVICE__ inline explicit __hip_fp8_e8m0(const int val) {}
+  __FP8_HOST_DEVICE__ inline explicit __hip_fp8_e8m0(const long int val);
+  __FP8_HOST_DEVICE__
+  inline explicit __hip_fp8_e8m0(const long long int val);
+  __FP8_HOST_DEVICE__
+  inline explicit __hip_fp8_e8m0(const short int val);
+  __FP8_HOST_DEVICE__
+  inline explicit __hip_fp8_e8m0(const unsigned int val);
+  __FP8_HOST_DEVICE__
+  inline explicit __hip_fp8_e8m0(const unsigned long int val);
+  __FP8_HOST_DEVICE__
+  inline explicit __hip_fp8_e8m0(const unsigned long long int val);
+  __FP8_HOST_DEVICE__
+  inline explicit __hip_fp8_e8m0(const unsigned short int val);
+
+  __FP8_HOST_DEVICE__ inline explicit operator __half() const {
+    return __float2half_rn(static_cast<float>(*this));
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator __hip_bfloat16() const {
+    return static_cast<__hip_bfloat16>(__hip_cvt_e8m0_to_bf16raw(__x));
+  }
+
+  /* fp8_e8m0 can't represent a zero value, so always return true.*/
+  __FP8_HOST_DEVICE__ inline explicit operator bool() const { return true; }
+  __FP8_HOST_DEVICE__ inline explicit operator char() const {
+    return __internal_cvt_e8m0_to_int_type<char>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator double() const {
+    return __internal_cvt_e8m0_to_double(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator float() const {
+    return __internal_cvt_e8m0_to_float(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator int() const {
+    return __internal_cvt_e8m0_to_int_type<int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator long int() const {
+    return __internal_cvt_e8m0_to_int_type<long int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator long long int() const {
+    return __internal_cvt_e8m0_to_int_type<long long int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator short int() const {
+    return __internal_cvt_e8m0_to_int_type<short int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator signed char() const {
+    return __internal_cvt_e8m0_to_int_type<signed char>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator unsigned char() const {
+    return __internal_cvt_e8m0_to_int_type<unsigned char>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator unsigned int() const {
+    return __internal_cvt_e8m0_to_int_type<unsigned int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator unsigned long int() const {
+    return __internal_cvt_e8m0_to_int_type<unsigned long int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator unsigned long long int() const {
+    return __internal_cvt_e8m0_to_int_type<unsigned long long int>(__x);
+  }
+  __FP8_HOST_DEVICE__ inline explicit operator unsigned short int() const {
+    return __internal_cvt_e8m0_to_int_type<unsigned short int>(__x);
+  }
+};
 
 /**
  * \brief struct representing single fp8 number with e4m3 interpretation
