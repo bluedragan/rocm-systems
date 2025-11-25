@@ -38,7 +38,7 @@ if(HIP_PLATFORM MATCHES "amd")
     -I${Catch2_SOURCE_DIR}/src -I${Catch2_BINARY_DIR}/generated-includes
     -o libLazyLoad.so)
 elseif(HIP_PLATFORM MATCHES "nvidia")
-  add_custom_target(libLazyLoad.so COMMAND ${CMAKE_CUDA_COMPILER} -Xcompiler -fPIC -lpthread -shared
+  add_custom_target(libLazyLoad.so COMMAND ${CMAKE_CUDA_COMPILER} -Xcompiler -fPIC -lpthread -Wno-deprecated-declarations -shared 
     -x hip ${CMAKE_CURRENT_SOURCE_DIR}/liblazyLoad.cc -I${CMAKE_CURRENT_SOURCE_DIR}/../../include ${HIP_PATH_OPT}
     -I${Catch2_SOURCE_DIR}/src -I${Catch2_BINARY_DIR}/generated-includes -I${HIP_PATH}/include/ -o libLazyLoad.so)
 endif()

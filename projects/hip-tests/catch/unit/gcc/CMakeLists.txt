@@ -5,11 +5,11 @@ if(HIP_PLATFORM MATCHES "amd" AND UNIX AND GCC_EXEC)
         gpu.cpp
     )
     # Creating Custom object file
-    add_custom_command(OUTPUT LaunchKernel.o COMMAND ${GCC_EXEC} -c
+    add_custom_command(OUTPUT LaunchKernel.o COMMAND ${GCC_EXEC} -c -Wno-deprecated-declarations
         ${CMAKE_CURRENT_SOURCE_DIR}/LaunchKernel.c -I${HIP_INCLUDE_DIR}
         -D__HIP_PLATFORM_AMD__ -o LaunchKernel.o)
     add_custom_target(LaunchKernel_custom DEPENDS LaunchKernel.o)
-    add_custom_command(OUTPUT hipMalloc.o COMMAND ${GCC_EXEC} -c 
+    add_custom_command(OUTPUT hipMalloc.o COMMAND ${GCC_EXEC} -c  -Wno-deprecated-declarations
         ${CMAKE_CURRENT_SOURCE_DIR}/hipMalloc.c -I${HIP_INCLUDE_DIR}
         -D__HIP_PLATFORM_AMD__ -o hipMalloc.o)
     add_custom_target(hipMalloc_custom DEPENDS hipMalloc.o)
