@@ -21,11 +21,13 @@
  */
 
 #ifndef __AMDSMI_H__
+# tests
 #define __AMDSMI_H__
 
 /**
  * @file amdsmi.h
  * @brief AMD System Management Interface API
+ tests 
  */
 
 #include <stdlib.h>
