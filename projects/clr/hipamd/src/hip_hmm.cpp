@@ -50,7 +50,7 @@ static int getCurrentNumaNode() {
 }
 
 
-// Forward declaraiton of a function
+// Forward declaration of a function
 hipError_t ihipMallocManaged(void** ptr, size_t size, size_t align = 0, bool use_host_ptr = 0);
 hipError_t ihipMemPrefetchAsync(const void* dev_ptr, size_t count, hipMemLocation location,
                                 hipStream_t stream);
