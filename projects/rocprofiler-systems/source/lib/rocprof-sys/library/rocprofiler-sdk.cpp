@@ -185,6 +185,7 @@ get_stream_id(Tp* _record)
         auto _region_id                        = _ecid_data->region_id;
         _record->correlation_id.external.value = _region_id;
         delete _ecid_data;
+        _record->correlation_id.external.ptr = nullptr;
     }
     return _stream_id;
 }
@@ -525,7 +526,6 @@ get_mem_alloc_address(
 }
 #endif
 
-// clang-format off
 void
 cache_region(const rocprofiler_callback_tracing_record_t* record,
              const rocprofiler_timestamp_t                start_timestamp,
@@ -537,92 +537,62 @@ cache_region(const rocprofiler_callback_tracing_record_t* record,
         trace_cache::get_metadata_registry().get_callback_tracing_info();
     auto _name = std::string{ callback_tracing_info.at(record->kind, record->operation) };
 
-    trace_cache::get_buffer_storage().store(
-        trace_cache::entry_type::region,
-        record->thread_id,
-        _name.c_str(),
-        record->correlation_id.internal,
-        get_parent_stack_id(record->correlation_id),
-        start_timestamp,
-        end_timestamp,
-        call_stack.c_str(),
-        args_str.c_str(),
-        category.c_str());
+    trace_cache::get_buffer_storage().store(trace_cache::region_sample{
+        record->thread_id, _name.c_str(), record->correlation_id.internal,
+        get_parent_stack_id(record->correlation_id), start_timestamp, end_timestamp,
+        call_stack.c_str(), args_str.c_str(), category.c_str() });
 }
 
 void
-cache_kernel_dispatch(rocprofiler_buffer_tracing_kernel_dispatch_record_t* record, uint64_t stream_handle)
+cache_kernel_dispatch(rocprofiler_buffer_tracing_kernel_dispatch_record_t* record,
+                      uint64_t                                             stream_handle)
 {
-    auto queue_handle  = record->dispatch_info.queue_id.handle;
+    auto queue_handle = record->dispatch_info.queue_id.handle;
 
     trace_cache::get_metadata_registry().add_queue(queue_handle);
     trace_cache::get_metadata_registry().add_stream(stream_handle);
 
-    trace_cache::get_buffer_storage().store(
-        trace_cache::entry_type::kernel_dispatch,
-        record->start_timestamp,
-        record->end_timestamp,
-        record->thread_id,
-        record->dispatch_info.agent_id.handle,
-        record->dispatch_info.kernel_id,
-        record->dispatch_info.dispatch_id,
-        record->dispatch_info.queue_id.handle,
-        record->correlation_id.internal,
-        get_parent_stack_id(record->correlation_id),
+    trace_cache::get_buffer_storage().store(trace_cache::kernel_dispatch_sample{
+        record->start_timestamp, record->end_timestamp, record->thread_id,
+        record->dispatch_info.agent_id.handle, record->dispatch_info.kernel_id,
+        record->dispatch_info.dispatch_id, record->dispatch_info.queue_id.handle,
+        record->correlation_id.internal, get_parent_stack_id(record->correlation_id),
         record->dispatch_info.private_segment_size,
-        record->dispatch_info.group_segment_size,
-        record->dispatch_info.workgroup_size.x,
-        record->dispatch_info.workgroup_size.y,
-        record->dispatch_info.workgroup_size.z,
-        record->dispatch_info.grid_size.x,
-        record->dispatch_info.grid_size.y,
-        record->dispatch_info.grid_size.z,
-        stream_handle);
-
+        record->dispatch_info.group_segment_size, record->dispatch_info.workgroup_size.x,
+        record->dispatch_info.workgroup_size.y, record->dispatch_info.workgroup_size.z,
+        record->dispatch_info.grid_size.x, record->dispatch_info.grid_size.y,
+        record->dispatch_info.grid_size.z, stream_handle });
 }
 
 void
-cache_memory_copy(rocprofiler_buffer_tracing_memory_copy_record_t* record, uint64_t stream_handle)
+cache_memory_copy(rocprofiler_buffer_tracing_memory_copy_record_t* record,
+                  uint64_t                                         stream_handle)
 {
     trace_cache::get_metadata_registry().add_stream(stream_handle);
-    trace_cache::get_buffer_storage().store(
-        trace_cache::entry_type::memory_copy,
-        record->start_timestamp,
-        record->end_timestamp,
-        record->thread_id,
-        record->dst_agent_id.handle,
-        record->src_agent_id.handle,
-        static_cast<int32_t>(record->kind),
-        static_cast<int32_t>(record->operation),
-        record->bytes,
-        record->correlation_id.internal,
-        get_parent_stack_id(record->correlation_id),
-        get_mem_copy_dst_address(*record),
-        get_mem_copy_src_address(*record),
-        stream_handle);
+    trace_cache::get_buffer_storage().store(trace_cache::memory_copy_sample{
+
+        record->start_timestamp, record->end_timestamp, record->thread_id,
+        record->dst_agent_id.handle, record->src_agent_id.handle,
+        static_cast<int32_t>(record->kind), static_cast<int32_t>(record->operation),
+        record->bytes, record->correlation_id.internal,
+        get_parent_stack_id(record->correlation_id), get_mem_copy_dst_address(*record),
+        get_mem_copy_src_address(*record), stream_handle });
 }
 
-#if (ROCPROFILER_VERSION >= 600)
+#if(ROCPROFILER_VERSION >= 600)
 void
-cache_memory_allocation(rocprofiler_buffer_tracing_memory_allocation_record_t* record, uint64_t stream_handle)
+cache_memory_allocation(rocprofiler_buffer_tracing_memory_allocation_record_t* record,
+                        uint64_t stream_handle)
 {
     trace_cache::get_metadata_registry().add_stream(stream_handle);
-    trace_cache::get_buffer_storage().store(
-        trace_cache::entry_type::memory_alloc,
-        record->start_timestamp,
-        record->end_timestamp,
-        record->thread_id,
-        record->agent_id.handle,
-        static_cast<int32_t>(record->kind),
-        static_cast<int32_t>(record->operation),
-        record->allocation_size,
-        record->correlation_id.internal,
-        get_parent_stack_id(record->correlation_id),
-        get_mem_alloc_address(*record),
-        stream_handle);
+    trace_cache::get_buffer_storage().store(trace_cache::memory_allocate_sample{
+        record->start_timestamp, record->end_timestamp, record->thread_id,
+        record->agent_id.handle, static_cast<int32_t>(record->kind),
+        static_cast<int32_t>(record->operation), record->allocation_size,
+        record->correlation_id.internal, get_parent_stack_id(record->correlation_id),
+        get_mem_alloc_address(*record), stream_handle });
 }
 #endif
-// clang-format on
 
 std::string
 get_args_string(const function_args_t& args)
@@ -689,8 +659,7 @@ tool_tracing_callback_start(CategoryT, rocprofiler_callback_tracing_record_t rec
 
     if(get_use_timemory())
     {
-        component::category_region<category::rocm_marker_api>::start<quirk::timemory>(
-            _name);
+        tracing::push_timemory(category::rocm_marker_api{}, _name);
     }
 }
 
@@ -760,8 +729,7 @@ tool_tracing_callback_stop(
 
     if(get_use_timemory())
     {
-        component::category_region<category::rocm_marker_api>::stop<quirk::timemory>(
-            _name);
+        tracing::pop_timemory(category::rocm_marker_api{}, _name);
     }
 
     if(get_use_perfetto())
@@ -784,7 +752,7 @@ tool_tracing_callback_stop(
                 if(config::get_perfetto_annotations())
                 {
                     tracing::add_perfetto_annotation(ctx, "begin_ns", _beg_ts);
-                    tracing::add_perfetto_annotation(ctx, "corr_id",
+                    tracing::add_perfetto_annotation(ctx, "stack_id",
                                                      record.correlation_id.internal);
                     if(stream_id.handle != 0)
                         tracing::add_perfetto_annotation(ctx, "stream_id",
@@ -1101,8 +1069,7 @@ ompt_tracing_callback_start(rocprofiler_callback_tracing_record_t record,
 
     if(get_use_timemory())
     {
-        component::category_region<category::rocm_marker_api>::start<quirk::timemory>(
-            _name);
+        tracing::push_timemory(category::rocm_marker_api{}, _name);
     }
 
     if(get_use_perfetto())
@@ -1124,7 +1091,7 @@ ompt_tracing_callback_start(rocprofiler_callback_tracing_record_t record,
                 if(config::get_perfetto_annotations())
                 {
                     tracing::add_perfetto_annotation(ctx, "begin_ns", _beg_ts);
-                    tracing::add_perfetto_annotation(ctx, "corr_id",
+                    tracing::add_perfetto_annotation(ctx, "stack_id",
                                                      record.correlation_id.internal);
                     if(stream_id.handle != 0)
                         tracing::add_perfetto_annotation(ctx, "stream_id",
@@ -1148,8 +1115,7 @@ ompt_tracing_callback_stop(
 
     if(get_use_timemory())
     {
-        component::category_region<category::rocm_marker_api>::stop<quirk::timemory>(
-            _name);
+        tracing::pop_timemory(category::rocm_marker_api{}, _name);
     }
 
     if(get_use_perfetto())
@@ -1242,28 +1208,38 @@ tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
     };
 
 #if(ROCPROFILER_VERSION >= 600)
-    // Skip implicit_task associated with an "initial-task-begin" occurrence
-    // as it is generated by our tool.
-    //  Occurs after our tool initializes OMPT but before the first OpenMP
-    //  region (user code) begins.
+    // Skip implicit_task associated with an "initial-task-begin" occurrence as
+    // well as the thread_begin associated with an "initial-thread-begin" occurrence
+    // as they are generated by our tool.
+    // The two callbacks occur after our tool initializes OMPT but before the
+    // first OpenMP region (user code) begins.
     // Note: Can occur multiple times (Ex: MPI+OpenMP hybrid)
-    if(record.kind == ROCPROFILER_CALLBACK_TRACING_OMPT &&
-       record.operation == ROCPROFILER_OMPT_ID_implicit_task)
+    if(record.kind == ROCPROFILER_CALLBACK_TRACING_OMPT)
     {
         auto* payload_data =
             static_cast<rocprofiler_callback_tracing_ompt_data_t*>(record.payload);
-        int flag = payload_data->args.implicit_task.flags;
-        if(flag & ompt_task_initial) return;
+        switch(record.operation)
+        {
+            case ROCPROFILER_OMPT_ID_implicit_task:
+            {
+                int flag = payload_data->args.implicit_task.flags;
+                if(flag & ompt_task_initial) return;  // Skips both the start and end
+                break;
+            }
+            case ROCPROFILER_OMPT_ID_thread_begin:
+            {
+                ompt_thread_t thread_type = payload_data->args.thread_begin.thread_type;
+                if(thread_type == ompt_thread_initial) return;
+                break;
+            }
+            default: break;
+        }
+        // TODO: Once finalization issue is fixed, skip the corresponding end
+        // of the thread_begin callback. Can be identified with:
+        // - thread_end: The thread_data ptr from the thread_begin callback generated
+        //    by the "initial-thread-begin" needs to match the thread_end's thread_data
+        //    ptr
     }
-    // TODO: Once ompt_callback_thread_begin is supported, we need to skip
-    //  every occurrence of an "initial-thread-begin" for similar reasons.
-    // This callback is identified with thread_type == ompt_thread_initial.
-
-    // Note: If the finalization issue is resolved, the corresponding ends of these
-    //  callbacks (which should be discarded) can be identified with:
-    // - implicit_task: (flag & ompt_task_initial) && endpoint == ompt_scope_end
-    // - thread_end: The thread_data ptr from the thread_begin callback generated
-    //    by the "initial-thread-begin" needs to match the thread_end's thread_data ptr
 #endif
 
     auto ts = rocprofiler_timestamp_t{};
@@ -1480,10 +1456,7 @@ tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
                 // Callbacks that are received but that we do not process
                 static const std::set<rocprofiler_ompt_operation_t> ompt_no_process = {
                     ROCPROFILER_OMPT_ID_callback_functions,  // "Fake" callback
-                    // There is no point in handling ompt_thread_begin events as the
-                    // corresponding ompt_thread_end event will not occur unless
-                    // runtime is finalized earlier
-                    ROCPROFILER_OMPT_ID_thread_begin,
+                    // Not processed as these are received after our tool finalizes
                     ROCPROFILER_OMPT_ID_thread_end,
                 };
 
@@ -1504,6 +1477,10 @@ tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
                         ompt_tracing_callback_stop(record, user_data, ts, _bt_data);
                         ompt_pop_parallel_callback(record, ts, _bt_data);
                         break;
+                    // Unlike parallel callbacks, we cannot receive the corresponding end
+                    // to thread_begin. Set thread_begin as "instant" so the user can
+                    // see callback without it spanning the entire track
+                    case ROCPROFILER_OMPT_ID_thread_begin:
                     case ROCPROFILER_OMPT_ID_lock_init:
                     case ROCPROFILER_OMPT_ID_lock_destroy:
                     // Although this has endpoint arg, treat it as instant event
@@ -1527,12 +1504,11 @@ tool_tracing_callback(rocprofiler_callback_tracing_record_t record,
                         // These callbacks are considered instant events and should start
                         // and immediately call stop as no corresponding "end" will be
                         // received
-                        auto start_ts = ts;
-                        ompt_tracing_callback_start(record, user_data, start_ts);
-                        ROCPROFILER_CALL(
-                            rocprofiler_get_timestamp(&ts));  // Set artificial end ts
-                        ompt_tracing_callback_stop(record, user_data, ts, _bt_data);
-                        ompt_cache_instant_event(record, start_ts, _bt_data);
+                        auto instant_ts = ts;
+                        ompt_tracing_callback_start(record, user_data, instant_ts);
+                        ompt_tracing_callback_stop(record, user_data, instant_ts,
+                                                   _bt_data);
+                        ompt_cache_instant_event(record, instant_ts, _bt_data);
                         break;
                     }
                     default:
@@ -1578,7 +1554,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
         return JOIN("", "HIP Activity Stream ", _stream_id);
     };
 
-    bool _group_by_queue = get_group_by_queue();
+    const bool _default_group_by_queue = get_group_by_queue();
 
     static auto _mtx = std::mutex{};
     auto        _lk  = std::unique_lock<std::mutex>{ _mtx };
@@ -1595,11 +1571,13 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                     static_cast<rocprofiler_buffer_tracing_kernel_dispatch_record_t*>(
                         header->payload);
 
+                bool _group_by_queue = _default_group_by_queue;
+
                 const auto* _kern_sym_data =
                     get_kernel_symbol_info(record->dispatch_info.kernel_id);
 
                 auto        _name     = tim::demangle(_kern_sym_data->kernel_name);
-                auto        _corr_id  = record->correlation_id.internal;
+                auto        _stack_id = record->correlation_id.internal;
                 auto        _beg_ns   = record->start_timestamp;
                 auto        _end_ns   = record->end_timestamp;
                 auto        _agent_id = record->dispatch_info.agent_id;
@@ -1646,7 +1624,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                         {
                             tracing::add_perfetto_annotation(ctx, "begin_ns", _beg_ns);
                             tracing::add_perfetto_annotation(ctx, "end_ns", _end_ns);
-                            tracing::add_perfetto_annotation(ctx, "corr_id", _corr_id);
+                            tracing::add_perfetto_annotation(ctx, "stack_id", _stack_id);
                             tracing::add_perfetto_annotation(ctx, "stream_id",
                                                              _stream_id);
 
@@ -1692,7 +1670,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
                         tracing::push_perfetto(category::rocm_kernel_dispatch{},
                                                _name.c_str(), _track, _beg_ns,
-                                               ::perfetto::Flow::ProcessScoped(_corr_id),
+                                               ::perfetto::Flow::ProcessScoped(_stack_id),
                                                add_perfetto_annotations);
 
                         tracing::pop_perfetto(category::rocm_kernel_dispatch{},
@@ -1705,7 +1683,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
                         tracing::push_perfetto(category::rocm_hip_stream{}, _name.c_str(),
                                                _track, _beg_ns,
-                                               ::perfetto::Flow::ProcessScoped(_corr_id),
+                                               ::perfetto::Flow::ProcessScoped(_stack_id),
                                                add_perfetto_annotations);
 
                         tracing::pop_perfetto(category::rocm_hip_stream{}, _name.c_str(),
@@ -1719,7 +1697,9 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                     static_cast<rocprofiler_buffer_tracing_memory_copy_record_t*>(
                         header->payload);
 
-                auto        _corr_id      = record->correlation_id.internal;
+                bool _group_by_queue = _default_group_by_queue;
+
+                auto        _stack_id     = record->correlation_id.internal;
                 auto        _beg_ns       = record->start_timestamp;
                 auto        _end_ns       = record->end_timestamp;
                 auto        _dst_agent_id = record->dst_agent_id;
@@ -1772,7 +1752,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
                         {
                             tracing::add_perfetto_annotation(ctx, "begin_ns", _beg_ns);
                             tracing::add_perfetto_annotation(ctx, "end_ns", _end_ns);
-                            tracing::add_perfetto_annotation(ctx, "corr_id", _corr_id);
+                            tracing::add_perfetto_annotation(ctx, "stack_id", _stack_id);
                             tracing::add_perfetto_annotation(ctx, "stream_id",
                                                              _stream_id);
                             tracing::add_perfetto_annotation(ctx, "dst_agent",
@@ -1797,7 +1777,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
                         tracing::push_perfetto(category::rocm_memory_copy{}, _name.data(),
                                                _track, _beg_ns,
-                                               ::perfetto::Flow::ProcessScoped(_corr_id),
+                                               ::perfetto::Flow::ProcessScoped(_stack_id),
                                                add_perfetto_annotations);
 
                         tracing::pop_perfetto(category::rocm_memory_copy{}, "", _track,
@@ -1810,7 +1790,7 @@ tool_tracing_buffered(rocprofiler_context_id_t /*context*/,
 
                         tracing::push_perfetto(category::rocm_hip_stream{}, _name.data(),
                                                _track, _beg_ns,
-                                               ::perfetto::Flow::ProcessScoped(_corr_id),
+                                               ::perfetto::Flow::ProcessScoped(_stack_id),
                                                add_perfetto_annotations);
 
                         tracing::pop_perfetto(category::rocm_hip_stream{}, "", _track,
