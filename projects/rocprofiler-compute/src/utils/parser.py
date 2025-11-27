@@ -1014,23 +1014,24 @@ def eval_metric(
         eval_result = metric_evaluator.eval_expression(expr)
         dfs[df_id].loc[row_id, col] = eval_result
 
-    # Check for FP64 utilization exceeding theoretical peak
-    validate_fp64_dual_issue(dfs, dfs_type, sys_info, raw_pmc_df)
+    # Check for metrics exceeding theoretical peak due to dual-issue
+    validate_dual_issue_metrics(dfs, dfs_type, sys_info, raw_pmc_df)
 
 
-def validate_fp64_dual_issue(
+def validate_dual_issue_metrics(
     dfs: dict,
     dfs_type: dict,
     sys_info: pd.Series,
     raw_pmc_df: Union[pd.DataFrame, dict],
 ) -> None:
     """
-    Check if FP64 metrics exceed theoretical peak and warn about dual-issue behavior.
+    Check if VALU Utilization or FP64 metrics exceed theoretical peak and warn about dual-issue behavior.
     For MI350 (gfx950), additionally verify SQ_ACTIVE_INST_VALU2 counter.
     """
     gpu_arch = sys_info.get("gpu_arch", "")
 
-    # FP64 metrics to check
+    # Metrics to check for dual-issue warnings
+    valu_utilization_metrics = ["VALU Utilization"]
     fp64_metrics = ["VALU FLOPs (F64)", "MFMA FLOPs (F64)"]
 
     for df_id, df in dfs.items():
@@ -1047,8 +1048,10 @@ def validate_fp64_dual_issue(
 
         for _, row in df.iterrows():
             metric_name = row.get("Metric", "")
-            if metric_name not in fp64_metrics:
+
+            if metric_name not in valu_utilization_metrics + fp64_metrics:
                 continue
+
             try:
                 value = float(row.get("Value", 0))
                 peak = float(row.get(peak_col, 0))
@@ -1064,16 +1067,20 @@ def validate_fp64_dual_issue(
                                 if valu2_sum > 0:
                                     dual_issue_confirmed = True
 
-                    warning_msg = (
-                        f"{metric_name} utilization ({utilization_pct:.1f}%) exceeds "
-                        f"theoretical peak. In rare circumstances, the GPU can co-issue "
-                        f"FP64 instructions, which may result in observed performance "
-                        f"above the theoretical peak. This is expected hardware behavior. "
-                        f"See https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/reference/faq.html#why-does-fp64-utilization-exceed-the-theoretical-peak"
-                    )
+                    # Determine warning message based on metric type
+                    if metric_name in valu_utilization_metrics:
+                        warning_msg = (
+                            f"VALU Utilization can go up to 200% because CU can dual-issue instructions. "
+                            f"See https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/reference/faq.html#why-does-valu-utilization-exceed-the-theoretical-peak for more information."
+                        )
+                    else:  # FP64 metrics
+                        warning_msg = (
+                            f"FP64 VALU FLOPs can exceed the peak value because these instructions can be dual-issued in specific circumstances. "
+                            f"See https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/reference/faq.html#why-does-valu-utilization-exceed-the-theoretical-peak for more information."
+                        )
 
                     if gpu_arch == "gfx950" and dual_issue_confirmed:
-                        warning_msg += " (SQ_ACTIVE_INST_VALU2 counter confirms dual-issue activity)"
+                        warning_msg += " (Dual-issue activity detected via SQ_ACTIVE_INST_VALU2 counter)"
 
                     console_warning(warning_msg)
 

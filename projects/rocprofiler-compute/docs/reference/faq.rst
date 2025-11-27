@@ -33,24 +33,20 @@ locale settings.
    $ export LC_ALL=C.UTF-8
    $ export LANG=C.UTF-8
 
-Why does FP64 utilization exceed the theoretical peak?
+Why does VALU utilization exceed the theoretical peak?
 ======================================================
 
-In rare circumstances, the GPU can co-issue FP64 instructions, which may result
-in observed FP64 performance values above the theoretical peak. This is expected
-hardware behavior and not a measurement error.
+In specific circumstances, GPU can co-issue two VALU instructions at the same clock. This may result in an observed VALU Utilization and FP64 VALU FLOP values above the theoretical peak. This is expected hardware behavior and not a measurement error.
 
-This dual-issue capability can be observed through:
+This dual-issue capability can be further investigated via:
 
-* **ATT (Application Tracing Tool)**: Shows two VALU bars at the same cycle
-* **PC Sampling**: The ``dual_issue_valu`` field indicates when dual-issue occurs
-* **Hardware counters**: On MI350 and newer platforms, the ``SQ_ACTIVE_INST_VALU2``
-  counter specifically tracks dual-issue VALU activity
+* **ROCm Compute Viewer**: You could see when VALU issues two instructions at the same cycle.
+* **On MI350 and newer platforms**: A new ``Dual-issue VALU Utilization`` metric is added which shows % of time when VALU is dual-issuing.
 
-When ROCm Compute Profiler detects FP64 utilization exceeding the theoretical peak,
-it displays a warning message indicating this behavior. On MI350 platforms, the tool
-additionally verifies the ``SQ_ACTIVE_INST_VALU2`` counter to confirm that dual-issue
-is indeed occurring.
+When ROCm Compute Profiler detects values exceeding their theoretical peaks, it displays warning messages:
+
+* **VALU Utilization**: "VALU Utilization can go up to 200% because CU can dual-issue instructions. See this FAQ for more information."
+* **FP64 VALU FLOPs**: "FP64 VALU FLOPs can exceed the peak value because these instructions can be dual-issued in specific circumstances. See this FAQ for more information."
 
 How can I SSH tunnel in MobaXterm?
 ==================================
