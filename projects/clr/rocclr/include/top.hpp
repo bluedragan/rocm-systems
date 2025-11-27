@@ -41,6 +41,8 @@
 #define WIN32_LEAN_AND_MEAN 1
 #endif /*_WIN32*/
 
+
+#include "utils/debug.hpp"
 #include "utils/macros.hpp"
 #include "CL/opencl.h"
 
@@ -53,6 +55,7 @@
 #if defined(ATI_ARCH_X86)
 #include <xmmintrin.h>
 #endif /*ATI_ARCH_X86*/
+
 
 #include <atomic>
 #include <cstdint>
@@ -107,6 +110,7 @@ constexpr size_t K = 1000;
 constexpr size_t M = K * K;
 constexpr size_t G = K * K * K;
 
+#include "utils/flags.hpp"
 #include "utils/debug.hpp"
 
 //! \addtogroup Utils
@@ -186,7 +190,9 @@ class ReferenceCountedObject {
   virtual bool terminate() { return true; }
 
  public:
-  ReferenceCountedObject() : referenceCount_(1) {}
+  ReferenceCountedObject() : referenceCount_(1) {
+    ClPrint(amd::LogLevel::LOG_WARNING, amd::LogMask::LOG_INIT, "Initializing reference count for object at: %p", this);
+  }
 
   void* operator new(size_t size) { return ::operator new(size); }
   void operator delete(void* p) { return ::operator delete(p); }
