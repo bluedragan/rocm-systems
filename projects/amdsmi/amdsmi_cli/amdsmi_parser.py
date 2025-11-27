@@ -300,14 +300,18 @@ class AMDSMIParser(argparse.ArgumentParser):
         class AMDSMIPowerCapArgs(argparse.Action):
             def __call__(self, parser: AMDSMIParser, namespace: argparse.Namespace,
                          values: list, option_string: Optional[str] = None) -> None:
-                if len(values) != 2:
+                if len(values) == 1:
+                    # Only wattage provided - set all available power cap types
+                    power_cap_value = values[0]
+                    power_cap_type = None  # None means all available sensors
+                elif len(values) == 2:
+                    # Both power type and wattage provided
+                    power_cap_value = values[0]
+                    power_cap_type = values[1]
+                    if power_cap_type not in ['ppt0', 'ppt1']:
+                        raise amdsmi_cli_exceptions.AmdSmiInvalidParameterException(sys.argv[1], power_cap_type, output_format)
+                else:
                     raise amdsmi_cli_exceptions.AmdSmiInvalidParameterException(sys.argv[1], values, output_format)
-
-                power_cap_type = values[0]
-                power_cap_value = values[1]
-
-                if power_cap_type not in ['ppt0', 'ppt1']:
-                    raise amdsmi_cli_exceptions.AmdSmiInvalidParameterException(sys.argv[1], power_cap_type, output_format)
 
                 if not power_cap_value.isdigit():
                     raise amdsmi_cli_exceptions.AmdSmiInvalidParameterValueException(sys.argv[1], power_cap_value, output_format)
@@ -1359,7 +1363,7 @@ class AMDSMIParser(argparse.ArgumentParser):
                                                        required=False, help=set_compute_partition_help, metavar=('TYPE/INDEX'))
                 set_value_exclusive_group.add_argument('-M', '--memory-partition', action='store', choices=self.helpers.get_memory_partition_types(), type=str.upper, required=False, help=set_memory_partition_help, metavar='PARTITION')
             # Power cap is enabled on guest, maintain order
-            set_value_exclusive_group.add_argument('-o', '--power-cap', action=self._power_cap_options(), nargs=2, required=False, help=set_power_cap_help, metavar=('PWR_TYPE', 'WATTS'))
+            set_value_exclusive_group.add_argument('-o', '--power-cap', action=self._power_cap_options(), nargs='+', required=False, help=set_power_cap_help, metavar=('WATTS', '[PWR_TYPE]'))
             if self.helpers.is_baremetal():
                 set_value_exclusive_group.add_argument('-p', '--soc-pstate', action='store', required=False, type=lambda value: self._not_negative_int(value, '--soc-pstate'), help=set_soc_pstate_help, metavar='POLICY_ID')
                 set_value_exclusive_group.add_argument('-x', '--xgmi-plpd', action='store', required=False, type=lambda value: self._not_negative_int(value, '--xgmi-plpd'), help=set_xgmi_plpd_help, metavar='POLICY_ID')
