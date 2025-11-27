@@ -155,14 +155,19 @@ uint ReferenceCountedObject::retain() {
 }
 
 uint ReferenceCountedObject::release() {
-  uint newCount = referenceCount_.fetch_sub(1, std::memory_order_acq_rel) - 1;
+  uint newCount = referenceCount_.fetch_sub(1, std::memory_order_release) - 1;
+  ClPrint(amd::LOG_WARNING, amd::LOG_INIT, "Pointer: %p reference count: %u", this, newCount);
   if (newCount == 0) {
     if (terminate()) {
+      // TODO g-h-c review this comment
       // The destructor should be called with a count==1 for the last thread
       // releasing the reference. Since an atomic load before the decrement
       // would add more atomic operations, simply bump the count to 1 here
       // before destructing the object.
-      referenceCount_.store(1, std::memory_order_relaxed);
+      std::atomic_thread_fence(std::memory_order_acquire);
+      //referenceCount_.load(std::memory_order_acquire);
+      //referenceCount_.store(1, std::memory_order_relaxed);
+      ClPrint(amd::LOG_WARNING, amd::LOG_INIT, "Deleting pointer: %p", this);
       delete this;
     }
   }
