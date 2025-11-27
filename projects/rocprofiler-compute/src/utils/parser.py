@@ -1025,7 +1025,9 @@ def validate_dual_issue_metrics(
     raw_pmc_df: Union[pd.DataFrame, dict],
 ) -> None:
     """
-    Check if VALU Utilization or FP64 metrics exceed theoretical peak and warn about dual-issue behavior.
+    Check if VALU Utilization or FP64 metrics exceed theoretical peak.
+
+    Warns about dual-issue behavior.
     For MI350 (gfx950), additionally verify SQ_ACTIVE_INST_VALU2 counter.
     """
     gpu_arch = sys_info.get("gpu_arch", "")
@@ -1057,7 +1059,7 @@ def validate_dual_issue_metrics(
                 peak = float(row.get(peak_col, 0))
 
                 if peak > 0 and value > peak:
-                    utilization_pct = (value / peak) * 100
+                    (value / peak) * 100
                     dual_issue_confirmed = False
                     if gpu_arch == "gfx950":
                         if isinstance(raw_pmc_df, dict) and "pmc_perf" in raw_pmc_df:
@@ -1068,19 +1070,32 @@ def validate_dual_issue_metrics(
                                     dual_issue_confirmed = True
 
                     # Determine warning message based on metric type
+                    faq_url = (
+                        "https://rocm.docs.amd.com/projects/"
+                        "rocprofiler-compute/en/latest/reference/"
+                        "faq.html#why-does-valu-utilization-exceed-"
+                        "the-theoretical-peak"
+                    )
+
                     if metric_name in valu_utilization_metrics:
                         warning_msg = (
-                            f"VALU Utilization can go up to 200% because CU can dual-issue instructions. "
-                            f"See https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/reference/faq.html#why-does-valu-utilization-exceed-the-theoretical-peak for more information."
+                            "VALU Utilization can go up to 200% "
+                            "because CU can dual-issue instructions. "
+                            f"See {faq_url} for more information."
                         )
                     else:  # FP64 metrics
                         warning_msg = (
-                            f"FP64 VALU FLOPs can exceed the peak value because these instructions can be dual-issued in specific circumstances. "
-                            f"See https://rocm.docs.amd.com/projects/rocprofiler-compute/en/latest/reference/faq.html#why-does-valu-utilization-exceed-the-theoretical-peak for more information."
+                            "FP64 VALU FLOPs can exceed the peak value "
+                            "because these instructions can be "
+                            "dual-issued in specific circumstances. "
+                            f"See {faq_url} for more information."
                         )
 
                     if gpu_arch == "gfx950" and dual_issue_confirmed:
-                        warning_msg += " (Dual-issue activity detected via SQ_ACTIVE_INST_VALU2 counter)"
+                        warning_msg += (
+                            " (Dual-issue activity detected "
+                            "via SQ_ACTIVE_INST_VALU2 counter)"
+                        )
 
                     console_warning(warning_msg)
 
