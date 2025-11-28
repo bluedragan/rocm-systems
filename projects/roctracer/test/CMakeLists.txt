@@ -50,6 +50,7 @@ hip_add_executable(MatrixTranspose hip/MatrixTranspose.cpp)
 target_link_options(MatrixTranspose PRIVATE "-Wl,--build-id=md5")
 target_include_directories(MatrixTranspose PRIVATE ${PROJECT_SOURCE_DIR}/inc)
 target_link_libraries(MatrixTranspose PRIVATE roctracer roctx)
+target_compile_definitions(MatrixTranspose PRIVATE LITTLEENDIAN_CPU) # <--- Add by Calvin Sze
 add_dependencies(mytest MatrixTranspose)
 
 ## Build MatrixTranspose_test, MatrixTranspose_hipaact_test and MatrixTranspose_mgpu
@@ -58,7 +59,7 @@ function(build_matrix_transpose_test OUTPUT_FILE DEFINITIONS)
   hip_add_executable(${OUTPUT_FILE} app/MatrixTranspose_test.cpp)
   ## Adding generated build-id as hip_add_executable doesn't generate automatically
   target_link_options(${OUTPUT_FILE} PRIVATE "-Wl,--build-id=md5")
-  target_compile_definitions(${OUTPUT_FILE} PRIVATE ITERATIONS=100 HIP_TEST=1 ${DEFINITIONS})
+  target_compile_definitions(${OUTPUT_FILE} PRIVATE LITTLEENDIAN_CPU ITERATIONS=100 HIP_TEST=1 ${DEFINITIONS})
   target_include_directories(${OUTPUT_FILE} PRIVATE ${PROJECT_SOURCE_DIR}/inc)
   target_link_libraries(${OUTPUT_FILE} PRIVATE roctracer roctx)
   add_dependencies(mytest ${OUTPUT_FILE})
@@ -92,7 +93,8 @@ function(generate_hsaco TARGET_ID INPUT_FILE OUTPUT_FILE)
     "-O2 -x cl -Xclang -finclude-default-header -cl-denorms-are-zero -cl-std=CL2.0 -Wl,--build-id=sha1
     -target amdgcn-amd-amdhsa -mcpu=${TARGET_ID} -o ${OUTPUT_FILE} ${INPUT_FILE}")
   add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/${OUTPUT_FILE}
-    COMMAND clang ${CLANG_ARG_LIST}
+    # COMMAND clang ${CLANG_ARG_LIST}
+    COMMAND /home/rocm/opt/rocm/bin/clang ${CLANG_ARG_LIST}
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     DEPENDS ${INPUT_FILE} clang
     COMMENT "Building ${OUTPUT_FILE}..."

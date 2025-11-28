@@ -1,0 +1,600 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      The system is: Linux - 6.18.0-rc4-amdgpu-g64018077425d-dirty - ppc64le
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /opt/rh/gcc-toolset-14/root/usr/bin/cc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/3.31.8/CompilerIdC/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /opt/rh/gcc-toolset-14/root/usr/bin/c++ 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/3.31.8/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi"
+      binary: "/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi'
+        
+        Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c074e/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c074e.dir/build.make CMakeFiles/cmTC_c074e.dir/build
+        gmake[1]: Entering directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi'
+        Building C object CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o
+        /opt/rh/gcc-toolset-14/root/usr/bin/cc   -v -o CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -c /usr/local/share/cmake-3.31/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/cc
+        OFFLOAD_TARGET_NAMES=nvptx-none
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: ppc64le-redhat-linux
+        Configured with: ../configure --enable-bootstrap --enable-languages=c,c++,fortran,lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_c074e.dir/'
+         /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/cc1 -quiet -v /usr/local/share/cmake-3.31/Modules/CMakeCCompilerABI.c -msecure-plt -quiet -dumpdir CMakeFiles/cmTC_c074e.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=power9 -mcpu=power9 -version -o /tmp/cc99In8L.s
+        GNU C17 (GCC) version 14.2.1 20250110 (Red Hat 14.2.1-12) (ppc64le-redhat-linux)
+        	compiled by GNU C version 14.2.1 20250110 (Red Hat 14.2.1-12), GMP version 6.2.0, MPFR version 4.1.0-p9, MPC version 1.2.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include-fixed"
+        ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../ppc64le-redhat-linux/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include
+         /usr/local/include
+         /opt/rh/gcc-toolset-14/root/usr/include
+         /usr/include
+        End of search list.
+        Compiler executable checksum: 7df940ed15b76e400f4a98dd11b4e366
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_c074e.dir/'
+         /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/as -v -a64 -mpower9 -many -mlittle -o CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o /tmp/cc99In8L.s
+        GNU assembler version 2.41 (ppc64le-redhat-linux) using BFD version version 2.41-5.el9
+        COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/
+        LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_c074e
+        /usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c074e.dir/link.txt --verbose=1
+        Using built-in specs.
+        COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/cc
+        COLLECT_LTO_WRAPPER=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper
+        OFFLOAD_TARGET_NAMES=nvptx-none
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: ppc64le-redhat-linux
+        Configured with: ../configure --enable-bootstrap --enable-languages=c,c++,fortran,lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) 
+        COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/
+        LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_c074e' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'cmTC_c074e.'
+         /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/collect2 -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/cch8UExS.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_c074e /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o
+        collect2 version 14.2.1 20250110 (Red Hat 14.2.1-12)
+        /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/cch8UExS.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_c074e /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o
+        GNU ld version 2.41-5.el9
+          Supported emulations:
+           elf64lppc
+           elf32lppc
+           elf32lppclinux
+           elf32lppcsim
+           elf64ppc
+           elf32ppc
+           elf32ppclinux
+           elf32ppcsim
+           elf32_spu
+           i386pep
+           i386pe
+           elf64bpf
+        GNU ld version 2.41-5.el9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_c074e' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'cmTC_c074e.'
+        /opt/rh/gcc-toolset-14/root/usr/bin/cc  -v -Wl,-v CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -o cmTC_c074e
+        gmake[1]: Leaving directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Parsed C implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include]
+          add: [/usr/local/include]
+          add: [/opt/rh/gcc-toolset-14/root/usr/include]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include] ==> [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/include] ==> [/opt/rh/gcc-toolset-14/root/usr/include]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include;/usr/local/include;/opt/rh/gcc-toolset-14/root/usr/include;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Parsed C implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c074e/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_c074e.dir/build.make CMakeFiles/cmTC_c074e.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-49DYbi']
+        ignore line: [Building C object CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o]
+        ignore line: [/opt/rh/gcc-toolset-14/root/usr/bin/cc   -v -o CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -c /usr/local/share/cmake-3.31/Modules/CMakeCCompilerABI.c]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/cc]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: ppc64le-redhat-linux]
+        ignore line: [Configured with: ../configure --enable-bootstrap --enable-languages=c c++ fortran lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_c074e.dir/']
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/cc1 -quiet -v /usr/local/share/cmake-3.31/Modules/CMakeCCompilerABI.c -msecure-plt -quiet -dumpdir CMakeFiles/cmTC_c074e.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=power9 -mcpu=power9 -version -o /tmp/cc99In8L.s]
+        ignore line: [GNU C17 (GCC) version 14.2.1 20250110 (Red Hat 14.2.1-12) (ppc64le-redhat-linux)]
+        ignore line: [	compiled by GNU C version 14.2.1 20250110 (Red Hat 14.2.1-12)  GMP version 6.2.0  MPFR version 4.1.0-p9  MPC version 1.2.1  isl version none]
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../ppc64le-redhat-linux/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/include]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: 7df940ed15b76e400f4a98dd11b4e366]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_c074e.dir/']
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/as -v -a64 -mpower9 -many -mlittle -o CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o /tmp/cc99In8L.s]
+        ignore line: [GNU assembler version 2.41 (ppc64le-redhat-linux) using BFD version version 2.41-5.el9]
+        ignore line: [COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/]
+        ignore line: [LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.']
+        ignore line: [Linking C executable cmTC_c074e]
+        ignore line: [/usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c074e.dir/link.txt --verbose=1]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/cc]
+        ignore line: [COLLECT_LTO_WRAPPER=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: ppc64le-redhat-linux]
+        ignore line: [Configured with: ../configure --enable-bootstrap --enable-languages=c c++ fortran lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) ]
+        ignore line: [COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/]
+        ignore line: [LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_c074e' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'cmTC_c074e.']
+        link line: [ /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/collect2 -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/cch8UExS.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_c074e /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o]
+          arg [/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/cch8UExS.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--no-add-needed] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [-V] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf64lppc] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_c074e] ==> ignore
+          arg [/lib/../lib64/crt1.o] ==> obj [/lib/../lib64/crt1.o]
+          arg [/lib/../lib64/crti.o] ==> obj [/lib/../lib64/crti.o]
+          arg [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o] ==> obj [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o]
+          arg [-L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14] ==> dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14]
+          arg [-L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64] ==> dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../..] ==> dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../..]
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [-lgcc] ==> lib [gcc]
+          arg [--push-state] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--pop-state] ==> ignore
+          arg [-lc] ==> lib [c]
+          arg [-lgcc] ==> lib [gcc]
+          arg [--push-state] ==> ignore
+          arg [--as-needed] ==> ignore
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [--pop-state] ==> ignore
+          arg [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o] ==> obj [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o]
+          arg [/lib/../lib64/crtn.o] ==> obj [/lib/../lib64/crtn.o]
+        ignore line: [collect2 version 14.2.1 20250110 (Red Hat 14.2.1-12)]
+        ignore line: [/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/cch8UExS.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_c074e /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_c074e.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o]
+        linker tool for 'C': /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld
+        collapse obj [/lib/../lib64/crt1.o] ==> [/lib64/crt1.o]
+        collapse obj [/lib/../lib64/crti.o] ==> [/lib64/crti.o]
+        collapse obj [/lib/../lib64/crtn.o] ==> [/lib64/crtn.o]
+        collapse library dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14] ==> [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14]
+        collapse library dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64] ==> [/opt/rh/gcc-toolset-14/root/usr/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../..] ==> [/opt/rh/gcc-toolset-14/root/usr/lib]
+        implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+        implicit objs: [/lib64/crt1.o;/lib64/crti.o;/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o;/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o;/lib64/crtn.o]
+        implicit dirs: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14;/opt/rh/gcc-toolset-14/root/usr/lib64;/lib64;/usr/lib64;/opt/rh/gcc-toolset-14/root/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Running the C compiler's linker: "/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld" "-v"
+      GNU ld version 2.41-5.el9
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ"
+      binary: "/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ'
+        
+        Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_34cd7/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_34cd7.dir/build.make CMakeFiles/cmTC_34cd7.dir/build
+        gmake[1]: Entering directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ'
+        Building CXX object CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o
+        /opt/rh/gcc-toolset-14/root/usr/bin/c++   -v -o CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
+        Using built-in specs.
+        COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/c++
+        OFFLOAD_TARGET_NAMES=nvptx-none
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: ppc64le-redhat-linux
+        Configured with: ../configure --enable-bootstrap --enable-languages=c,c++,fortran,lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_34cd7.dir/'
+         /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/cc1plus -quiet -v -D_GNU_SOURCE /usr/local/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp -msecure-plt -quiet -dumpdir CMakeFiles/cmTC_34cd7.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=power9 -mcpu=power9 -version -o /tmp/cc8om442.s
+        GNU C++17 (GCC) version 14.2.1 20250110 (Red Hat 14.2.1-12) (ppc64le-redhat-linux)
+        	compiled by GNU C version 14.2.1 20250110 (Red Hat 14.2.1-12), GMP version 6.2.0, MPFR version 4.1.0-p9, MPC version 1.2.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include-fixed"
+        ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../ppc64le-redhat-linux/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14
+         /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/ppc64le-redhat-linux
+         /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/backward
+         /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include
+         /usr/local/include
+         /opt/rh/gcc-toolset-14/root/usr/include
+         /usr/include
+        End of search list.
+        Compiler executable checksum: d0b6d4391a4adadaf3adaf8f619422f7
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_34cd7.dir/'
+         /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/as -v -a64 -mpower9 -many -mlittle -o CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o /tmp/cc8om442.s
+        GNU assembler version 2.41 (ppc64le-redhat-linux) using BFD version version 2.41-5.el9
+        COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/
+        LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.'
+        Linking CXX executable cmTC_34cd7
+        /usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_34cd7.dir/link.txt --verbose=1
+        Using built-in specs.
+        COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/c++
+        COLLECT_LTO_WRAPPER=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper
+        OFFLOAD_TARGET_NAMES=nvptx-none
+        OFFLOAD_TARGET_DEFAULT=1
+        Target: ppc64le-redhat-linux
+        Configured with: ../configure --enable-bootstrap --enable-languages=c,c++,fortran,lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1
+        Thread model: posix
+        Supported LTO compression algorithms: zlib zstd
+        gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) 
+        COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/
+        LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_34cd7' '-foffload-options=-l_GCC_m' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'cmTC_34cd7.'
+         /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/collect2 -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/ccKlBp4G.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_34cd7 /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o
+        collect2 version 14.2.1 20250110 (Red Hat 14.2.1-12)
+        /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/ccKlBp4G.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_34cd7 /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o
+        GNU ld version 2.41-5.el9
+          Supported emulations:
+           elf64lppc
+           elf32lppc
+           elf32lppclinux
+           elf32lppcsim
+           elf64ppc
+           elf32ppc
+           elf32ppclinux
+           elf32ppcsim
+           elf32_spu
+           i386pep
+           i386pe
+           elf64bpf
+        GNU ld version 2.41-5.el9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_34cd7' '-foffload-options=-l_GCC_m' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'cmTC_34cd7.'
+        /opt/rh/gcc-toolset-14/root/usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_34cd7
+        gmake[1]: Leaving directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:182 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14]
+          add: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/ppc64le-redhat-linux]
+          add: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/backward]
+          add: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include]
+          add: [/usr/local/include]
+          add: [/opt/rh/gcc-toolset-14/root/usr/include]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14] ==> [/opt/rh/gcc-toolset-14/root/usr/include/c++/14]
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/ppc64le-redhat-linux] ==> [/opt/rh/gcc-toolset-14/root/usr/include/c++/14/ppc64le-redhat-linux]
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/backward] ==> [/opt/rh/gcc-toolset-14/root/usr/include/c++/14/backward]
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include] ==> [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/opt/rh/gcc-toolset-14/root/usr/include] ==> [/opt/rh/gcc-toolset-14/root/usr/include]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/opt/rh/gcc-toolset-14/root/usr/include/c++/14;/opt/rh/gcc-toolset-14/root/usr/include/c++/14/ppc64le-redhat-linux;/opt/rh/gcc-toolset-14/root/usr/include/c++/14/backward;/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include;/usr/local/include;/opt/rh/gcc-toolset-14/root/usr/include;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:218 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld[0-9]*(\\.[a-z]+)?|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(\\.[a-z]+)?))("|,| |$)]
+        ignore line: [Change Dir: '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_34cd7/fast]
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_34cd7.dir/build.make CMakeFiles/cmTC_34cd7.dir/build]
+        ignore line: [gmake[1]: Entering directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-r0KshZ']
+        ignore line: [Building CXX object CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/opt/rh/gcc-toolset-14/root/usr/bin/c++   -v -o CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/c++]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: ppc64le-redhat-linux]
+        ignore line: [Configured with: ../configure --enable-bootstrap --enable-languages=c c++ fortran lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) ]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_34cd7.dir/']
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/cc1plus -quiet -v -D_GNU_SOURCE /usr/local/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp -msecure-plt -quiet -dumpdir CMakeFiles/cmTC_34cd7.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=power9 -mcpu=power9 -version -o /tmp/cc8om442.s]
+        ignore line: [GNU C++17 (GCC) version 14.2.1 20250110 (Red Hat 14.2.1-12) (ppc64le-redhat-linux)]
+        ignore line: [	compiled by GNU C version 14.2.1 20250110 (Red Hat 14.2.1-12)  GMP version 6.2.0  MPFR version 4.1.0-p9  MPC version 1.2.1  isl version none]
+        ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+        ignore line: [ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include-fixed"]
+        ignore line: [ignoring nonexistent directory "/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../ppc64le-redhat-linux/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/ppc64le-redhat-linux]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../include/c++/14/backward]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/include]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Compiler executable checksum: d0b6d4391a4adadaf3adaf8f619422f7]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_34cd7.dir/']
+        ignore line: [ /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/as -v -a64 -mpower9 -many -mlittle -o CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o /tmp/cc8om442.s]
+        ignore line: [GNU assembler version 2.41 (ppc64le-redhat-linux) using BFD version version 2.41-5.el9]
+        ignore line: [COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/]
+        ignore line: [LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [Linking CXX executable cmTC_34cd7]
+        ignore line: [/usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_34cd7.dir/link.txt --verbose=1]
+        ignore line: [Using built-in specs.]
+        ignore line: [COLLECT_GCC=/opt/rh/gcc-toolset-14/root/usr/bin/c++]
+        ignore line: [COLLECT_LTO_WRAPPER=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper]
+        ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none]
+        ignore line: [OFFLOAD_TARGET_DEFAULT=1]
+        ignore line: [Target: ppc64le-redhat-linux]
+        ignore line: [Configured with: ../configure --enable-bootstrap --enable-languages=c c++ fortran lto --prefix=/opt/rh/gcc-toolset-14/root/usr --mandir=/opt/rh/gcc-toolset-14/root/usr/share/man --infodir=/opt/rh/gcc-toolset-14/root/usr/share/info --with-bugurl=http://bugzilla.redhat.com/bugzilla --enable-shared --enable-threads=posix --enable-checking=release --enable-targets=powerpcle-linux --disable-multilib --with-system-zlib --enable-__cxa_atexit --disable-libunwind-exceptions --enable-gnu-unique-object --enable-linker-build-id --with-gcc-major-version-only --enable-libstdcxx-backtrace --with-libstdcxx-zoneinfo=/usr/share/zoneinfo --with-linker-hash-style=gnu --enable-plugin --enable-initfini-array --without-isl --enable-offload-targets=nvptx-none --without-cuda-driver --enable-offload-defaulted --enable-gnu-indirect-function --enable-secureplt --with-long-double-128 --with-long-double-format=ibm --with-cpu-32=power9 --with-tune-32=power9 --with-cpu-64=power9 --with-tune-64=power9 --build=ppc64le-redhat-linux --with-build-config=bootstrap-lto --enable-link-serialization=1]
+        ignore line: [Thread model: posix]
+        ignore line: [Supported LTO compression algorithms: zlib zstd]
+        ignore line: [gcc version 14.2.1 20250110 (Red Hat 14.2.1-12) (GCC) ]
+        ignore line: [COMPILER_PATH=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/]
+        ignore line: [LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64/:/lib/../lib64/:/usr/lib/../lib64/:/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../:/lib/:/usr/lib/]
+        ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_34cd7' '-foffload-options=-l_GCC_m' '-shared-libgcc' '-mtune=power9' '-mcpu=power9' '-dumpdir' 'cmTC_34cd7.']
+        link line: [ /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/collect2 -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/ccKlBp4G.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_34cd7 /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o]
+          arg [/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/collect2] ==> ignore
+          arg [-plugin] ==> ignore
+          arg [/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so] ==> ignore
+          arg [-plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper] ==> ignore
+          arg [-plugin-opt=-fresolution=/tmp/ccKlBp4G.res] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lc] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+          arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--no-add-needed] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [-V] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf64lppc] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_34cd7] ==> ignore
+          arg [/lib/../lib64/crt1.o] ==> obj [/lib/../lib64/crt1.o]
+          arg [/lib/../lib64/crti.o] ==> obj [/lib/../lib64/crti.o]
+          arg [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o] ==> obj [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o]
+          arg [-L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14] ==> dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14]
+          arg [-L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64] ==> dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../..] ==> dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../..]
+          arg [-v] ==> ignore
+          arg [CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-lstdc++] ==> lib [stdc++]
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o] ==> obj [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o]
+          arg [/lib/../lib64/crtn.o] ==> obj [/lib/../lib64/crtn.o]
+        ignore line: [collect2 version 14.2.1 20250110 (Red Hat 14.2.1-12)]
+        ignore line: [/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld -plugin /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/liblto_plugin.so -plugin-opt=/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/lto-wrapper -plugin-opt=-fresolution=/tmp/ccKlBp4G.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -V -m elf64lppc -dynamic-linker /lib64/ld64.so.2 -o cmTC_34cd7 /lib/../lib64/crt1.o /lib/../lib64/crti.o /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../.. -v CMakeFiles/cmTC_34cd7.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o /lib/../lib64/crtn.o]
+        linker tool for 'CXX': /opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld
+        collapse obj [/lib/../lib64/crt1.o] ==> [/lib64/crt1.o]
+        collapse obj [/lib/../lib64/crti.o] ==> [/lib64/crti.o]
+        collapse obj [/lib/../lib64/crtn.o] ==> [/lib64/crtn.o]
+        collapse library dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14] ==> [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14]
+        collapse library dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../../../lib64] ==> [/opt/rh/gcc-toolset-14/root/usr/lib64]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/../../..] ==> [/opt/rh/gcc-toolset-14/root/usr/lib]
+        implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+        implicit objs: [/lib64/crt1.o;/lib64/crti.o;/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtbegin.o;/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14/crtend.o;/lib64/crtn.o]
+        implicit dirs: [/opt/rh/gcc-toolset-14/root/usr/lib/gcc/ppc64le-redhat-linux/14;/opt/rh/gcc-toolset-14/root/usr/lib64;/lib64;/usr/lib64;/opt/rh/gcc-toolset-14/root/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/Internal/CMakeDetermineLinkerId.cmake:40 (message)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:255 (cmake_determine_linker_id)"
+      - "/usr/local/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Running the CXX compiler's linker: "/opt/rh/gcc-toolset-14/root/usr/libexec/gcc/ppc64le-redhat-linux/14/ld" "-v"
+      GNU ld version 2.41-5.el9
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/local/share/cmake-3.31/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/local/share/cmake-3.31/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "/usr/local/share/cmake-3.31/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "/usr/local/share/cmake-3.31/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "rocclr/cmake/ROCclr.cmake:37 (find_package)"
+      - "rocclr/CMakeLists.txt:28 (include)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-gP3kOS"
+      binary: "/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-gP3kOS"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/home/rocm/src/rocm-systems/projects/clr/rocclr/cmake"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-gP3kOS'
+        
+        Run Build Command(s): /usr/local/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_23f59/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_23f59.dir/build.make CMakeFiles/cmTC_23f59.dir/build
+        gmake[1]: Entering directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-gP3kOS'
+        Building C object CMakeFiles/cmTC_23f59.dir/src.c.o
+        /opt/rh/gcc-toolset-14/root/usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_23f59.dir/src.c.o -c /home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-gP3kOS/src.c
+        Linking C executable cmTC_23f59
+        /usr/local/bin/cmake -E cmake_link_script CMakeFiles/cmTC_23f59.dir/link.txt --verbose=1
+        /opt/rh/gcc-toolset-14/root/usr/bin/cc CMakeFiles/cmTC_23f59.dir/src.c.o -o cmTC_23f59
+        gmake[1]: Leaving directory '/home/rocm/src/rocm-systems/projects/clr/build1/CMakeFiles/CMakeScratch/TryCompile-gP3kOS'
+        
+      exitCode: 0
+...

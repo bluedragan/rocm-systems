@@ -1,0 +1,1 @@
+/opt/rh/gcc-toolset-14/root/usr/bin/c++ -g CMakeFiles/rocminfo.dir/rocminfo.cc.o -o rocminfo  -Wl,-rpath,/home/rocm/opt/rocm/lib64: /home/rocm/opt/rocm/lib64/libhsa-runtime64.so.1.18.0 

@@ -1,0 +1,13 @@
+/home/rocm/opt/rocm/.info/version
+/home/rocm/opt/rocm/lib64/librocm-core.so.1.0.70102
+/home/rocm/opt/rocm/lib64/librocm-core.so.1
+/home/rocm/opt/rocm/lib64/librocm-core.so
+/home/rocm/opt/rocm/include/rocm-core/rocm_version.h
+/home/rocm/opt/rocm/include/rocm-core/rocm_getpath.h
+/home/rocm/opt/rocm/libexec/rocm-core/runpath_to_rpath.py
+/home/rocm/opt/rocm/lib64/rocmmod
+/home/rocm/opt/rocm/lib64/cmake/rocm-core/rocm-core-config.cmake
+/home/rocm/opt/rocm/lib64/cmake/rocm-core/rocm-core-config-version.cmake
+/home/rocm/opt/rocm/lib64/cmake/rocm-core/rocmCoreTargets.cmake
+/home/rocm/opt/rocm/lib64/cmake/rocm-core/rocmCoreTargets-noconfig.cmake
+/home/rocm/opt/rocm/share/doc/rocm-core/LICENSE.md

@@ -1,0 +1,3 @@
+/home/rocm/opt/rocm/bin/rocminfo
+/home/rocm/opt/rocm/bin/rocm_agent_enumerator
+/home/rocm/opt/rocm/share/doc/rocminfo/License.txt

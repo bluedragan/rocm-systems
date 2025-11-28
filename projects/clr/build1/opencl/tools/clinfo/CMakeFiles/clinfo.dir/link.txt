@@ -1,0 +1,1 @@
+/opt/rh/gcc-toolset-14/root/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/clinfo.dir/link.d CMakeFiles/clinfo.dir/clinfo.cpp.o -o clinfo  -Wl,-rpath,/home/rocm/opt/rocm/lib64: /home/rocm/opt/rocm/lib64/libOpenCL.so

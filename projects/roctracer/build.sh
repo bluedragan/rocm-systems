@@ -22,9 +22,11 @@
 # IN THE SOFTWARE.
 ################################################################################
 
+set +x
+
 SRC_DIR=`dirname $0`
 COMPONENT="roctracer"
-ROCM_PATH="${ROCM_PATH:=/opt/rocm}"
+ROCM_PATH="${ROCM_PATH:=/home/rocm/opt/rocm}"
 LD_RUNPATH_FLAG=" -Wl,--enable-new-dtags -Wl,--rpath,$ROCM_PATH/lib:$ROCM_PATH/lib64"
 DEFAULTS=defaults.sh
 
@@ -45,7 +47,7 @@ if [ -z "$PACKAGE_PREFIX" ] ; then PACKAGE_PREFIX="$ROCM_PATH/$COMPONENT"; fi
 if [ -z "$PREFIX_PATH" ] ; then PREFIX_PATH=$PACKAGE_ROOT; fi
 if [ -z "$HIP_VDI" ] ; then HIP_VDI=0; fi
 if [ -n "$ROCM_RPATH" ] ; then LD_RUNPATH_FLAG=" -Wl,--enable-new-dtags -Wl,--rpath,${ROCM_RPATH}"; fi
-if [ -z "$GPU_LIST" ] ; then GPU_LIST="gfx900 gfx906 gfx908 gfx90a gfx940 gfx941 gfx942 gfx1030 gfx1100 gfx1101 gfx1102"; fi
+if [ -z "$GPU_LIST" ] ; then GPU_LIST="gfx900 gfx906 gfx908 gfx90a gfx942 gfx1030 gfx1100 gfx1101 gfx1102"; fi
 
 ROCTRACER_ROOT=$(cd $ROCTRACER_ROOT && echo $PWD)
 
@@ -53,8 +55,11 @@ if [ "$TO_CLEAN" = "yes" ] ; then rm -rf $BUILD_DIR; fi
 mkdir -p $BUILD_DIR
 pushd $BUILD_DIR
 
+LDFLAGS="-L${ROCM_PATH}/lib64 -L${ROCM_PATH}/lib  -lLLVMSupport -Wl,-rpath-link,/home/rocm/opt/rocm/lib  -Wl,-rpath-link,/home/rocm/opt/rocm/lib64" \
 cmake \
-    -DCMAKE_MODULE_PATH=$ROCM_PATH/hip/cmake \
+    -DCMAKE_C_COMPILER=$ROCM_PATH/bin/clang \
+    -DCMAKE_CXX_COMPILER=$ROCM_PATH/bin/clang++ \
+    -DCMAKE_MODULE_PATH=$ROCM_PATH/lib64/cmake/hip \
     -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
     -DCMAKE_PREFIX_PATH="$PREFIX_PATH" \
     -DCMAKE_INSTALL_PREFIX=$PACKAGE_ROOT \
@@ -62,10 +67,10 @@ cmake \
     -DCPACK_GENERATOR="${CPACKGEN:-"DEB;RPM"}" \
     -DCMAKE_SHARED_LINKER_FLAGS="$LD_RUNPATH_FLAG" \
     -DGPU_TARGETS="$GPU_LIST" \
-    -DCPACK_OBJCOPY_EXECUTABLE="${PACKAGE_ROOT}/llvm/bin/llvm-objcopy" \
-    -DCPACK_READELF_EXECUTABLE="${PACKAGE_ROOT}/llvm/bin/llvm-readelf" \
-    -DCPACK_STRIP_EXECUTABLE="${PACKAGE_ROOT}/llvm/bin/llvm-strip" \
-    -DCPACK_OBJDUMP_EXECUTABLE="${PACKAGE_ROOT}/llvm/bin/llvm-objdump" \
+    -DCPACK_OBJCOPY_EXECUTABLE="${PACKAGE_ROOT}/bin/llvm-objcopy" \
+    -DCPACK_READELF_EXECUTABLE="${PACKAGE_ROOT}/bin/llvm-readelf" \
+    -DCPACK_STRIP_EXECUTABLE="${PACKAGE_ROOT}/bin/llvm-strip" \
+    -DCPACK_OBJDUMP_EXECUTABLE="${PACKAGE_ROOT}/bin/llvm-objdump" \
      $ROCTRACER_ROOT
 
 make

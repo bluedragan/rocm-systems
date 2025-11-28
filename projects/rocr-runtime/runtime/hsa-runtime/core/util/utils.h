@@ -60,6 +60,14 @@
 #include <thread>
 #include <locale>
 
+
+#if defined(__powerpc__)                                // <----- Add begin
+static inline void _mm_clflush(const void* addr) {
+    asm volatile("dcbf 0, %0" : : "r"(addr));
+    asm volatile("sync");
+}
+#endif
+
 namespace rocr {
 extern FILE* log_file;
 extern uint8_t log_flags[8];

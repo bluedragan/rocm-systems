@@ -1,0 +1,2 @@
+/opt/rh/gcc-toolset-14/root/usr/bin/ar qc ../../lib/libhiprtc-builtins.a hip_rtc_gen/hipRTC_header.o
+/opt/rh/gcc-toolset-14/root/usr/bin/ranlib ../../lib/libhiprtc-builtins.a

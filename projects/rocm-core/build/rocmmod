@@ -1,0 +1,20 @@
+#######################################################################
+##
+## Rocm module
+## Copyright © Advanced Micro Devices, Inc., or its affiliates.
+## SPDX-License-Identifier: MIT
+##
+
+module-whatis   "Adds ROCm binary paths to your environment variable"
+
+proc ModulesHelp { } {
+    puts stderr "\tThe ROCM Module."
+}
+
+set ROOT [file normalize [file dirname [file normalize ${ModulesCurrentModulefile}/__]]/../..]
+
+prepend-path PATH "${ROOT}/bin:${ROOT}/lib/llvm/bin"
+prepend-path MANPATH "${ROOT}/share/man:${ROOT}/lib/llvm/share/man1"
+prepend-path CMAKE_PREFIX_PATH "${ROOT}"
+setenv ROCM_PATH "${ROOT}"
+setenv HIP_PATH "${ROOT}"

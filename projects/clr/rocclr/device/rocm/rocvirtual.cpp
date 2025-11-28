@@ -52,6 +52,12 @@
 #endif
 #endif
 
+// ----------------------------- Add by Calvin sze -- Begin
+#if defined(__powerpc__)
+#include <ppc64le_mmintrin.h>
+#endif
+// -------------------------
+
 /**
  * HSA image object size in bytes (see HSAIL spec)
  */

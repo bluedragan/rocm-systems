@@ -21,6 +21,10 @@
 #include "hip_graph_internal.hpp"
 #include <queue>
 
+#if defined(__powerpc__)
+#include <ppc64le_mmintrin.h>
+#endif
+
 #define CASE_STRING(X, C)                                                                          \
   case X:                                                                                          \
     case_string = #C;                                                                              \
