@@ -1,1 +1,0 @@
-/opt/rh/gcc-toolset-14/root/usr/bin/c++ -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/cltrace.dir/link.d -shared -Wl,-soname,libcltrace.so -o libcltrace.so CMakeFiles/cltrace.dir/cltrace.cpp.o  -Wl,--version-script=/home/rocm/src/rocm-systems/projects/clr/opencl/tools/cltrace/cltrace.map

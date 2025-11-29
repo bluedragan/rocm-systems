@@ -1,1 +1,0 @@
-/opt/rh/gcc-toolset-14/root/usr/bin/c++ -fPIC   -Wl,-z,nodelete -Wl,-no-undefined -shared -Wl,-soname,librocm-core.so.1 -o librocm-core.so.1.0.70102 "CMakeFiles/rocm-core.dir/rocm_version.cpp.o" "CMakeFiles/rocm-core.dir/rocm_getpath.cpp.o"  -ldl 

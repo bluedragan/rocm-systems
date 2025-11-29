@@ -1,9 +1,0 @@
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/rocminfo.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/package.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/package_source.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/edit_cache.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/rebuild_cache.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/list_install_components.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/install.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/install/local.dir
-/home/rocm/src/rocm-systems/projects/rocminfo/build/CMakeFiles/install/strip.dir
