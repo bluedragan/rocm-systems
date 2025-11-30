@@ -653,7 +653,10 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtCreateQueueExt(HSAuint32 NodeId,
 	else if (q->gfxv >= 0x80000)
 		q->eop_buffer_size = 4096;
 
+
+#if defined(__powerpc__)
 	q->eop_buffer_size = ( q->eop_buffer_size + 65536 - 1) & ~(65536 - 1);
+#endif
 	/* By default, CUs are all turned on. Initialize cu_mask to '1
 	 * for all CU bits.
 	 */

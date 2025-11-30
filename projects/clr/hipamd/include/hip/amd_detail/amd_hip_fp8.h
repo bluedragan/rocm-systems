@@ -64,7 +64,14 @@
 #endif
 
 // Include it explicitly for HIPRTC
+// #include "amd_hip_bf16.h"
+// <----- Start here 
+#if !defined(__powerpc__)
 #include "amd_hip_bf16.h"
+#else
+#include "amd_ppc64le_hip_bf16.h"
+#endif
+// <----- End here
 
 #if !defined(__HIPCC_RTC__)
 #include <hip/amd_detail/amd_hip_common.h>

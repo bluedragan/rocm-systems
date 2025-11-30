@@ -522,8 +522,11 @@ uint32_t AqlQueue::ComputeRingBufferMaxPkts() {
 void AqlQueue::AllocRegisteredRingBuffer(uint32_t queue_size_pkts) {
   // Allocate storage for the ring buffer.
   ring_buf_alloc_bytes_ = queue_size_pkts * sizeof(core::AqlPacket);
-  // assert(IsMultipleOf(ring_buf_alloc_bytes_, 4096) && "Ring buffer sizes must be 4KiB aligned.");
+#if !defined(__powerpc__)
+  assert(IsMultipleOf(ring_buf_alloc_bytes_, 4096) && "Ring buffer sizes must be 4KiB aligned.");
+#else
   ring_buf_alloc_bytes_ = (ring_buf_alloc_bytes_ + 65536 - 1) & ~(65536 - 1);
+#endif
 
   if (IsDeviceMemRingBuf()) {
     if (!agent_->LargeBarEnabled()) {
@@ -536,8 +539,11 @@ void AqlQueue::AllocRegisteredRingBuffer(uint32_t queue_size_pkts) {
         core::MemoryRegion::AllocateExecutable | core::MemoryRegion::AllocateUncached);
   } else {
     ring_buf_ = agent_->system_allocator()(
-        // ring_buf_alloc_bytes_, 0x1000,
+#if !defined(__powerpc__)
+        ring_buf_alloc_bytes_, 0x1000,
+#else
         ring_buf_alloc_bytes_, 0x10000,
+#endif
         core::MemoryRegion::AllocateExecutable);
   }
 
