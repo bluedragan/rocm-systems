@@ -226,6 +226,17 @@ if(ENABLE_ESMI_LIB)
         endif()
     endif()
 
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_SOURCE_DIR}/patches/esmi/esmi_ib_library_e_smi.c.patch
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/base/amdsmi/esmi_ib_library/src
+            RESULT_VARIABLE PATCH_RESULT
+            OUTPUT_VARIABLE PATCH_OUTPUT
+            ERROR_VARIABLE PATCH_ERROR
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+    endif()
+
     # Make sure to update the amd_hsmp.h file with the corresponding esmi version
     file(COPY "${PROJECT_SOURCE_DIR}/include/amd_smi/impl/amd_hsmp.h"
          DESTINATION "${PROJECT_SOURCE_DIR}/esmi_ib_library/include/asm")

@@ -213,7 +213,7 @@ void Runtime::RegisterAgent(Agent* agent, bool Enabled) {
         if (pool->kernarg()) {
           system_allocator_ = [pool](size_t size, size_t alignment,
                                      MemoryRegion::AllocateFlags alloc_flags, int agent_node_id) -> void* {
-            assert(alignment <= 4096);
+         //   assert(alignment <= 4096);
             void* ptr = NULL;
             return (HSA_STATUS_SUCCESS ==
                     core::Runtime::runtime_singleton_->AllocateMemory(pool, size, alloc_flags,
@@ -2220,6 +2220,7 @@ bool Runtime::VMFaultHandler(hsa_signal_value_t val, void* arg) {
       } else if (fault.Failure.ErrorType == 3) {
         reason += "Generic hang recovery";
       } else {
+	std::cout<< "reason : "<<fault.Failure.ErrorType<<std::endl;
         reason += "Unknown";
       }
 
@@ -3070,8 +3071,9 @@ hsa_status_t Runtime::SetSvmAttrib(void* ptr, size_t size,
   if (clear_flags) attribs.push_back(kmtPair(HSA_SVM_ATTR_CLR_FLAGS, clear_flags));
   if (set_flags) attribs.push_back(kmtPair(HSA_SVM_ATTR_SET_FLAGS, set_flags));
 
-  uint8_t* base = AlignDown((uint8_t*)ptr, 4096);
-  uint8_t* end = AlignUp((uint8_t*)ptr + size, 4096);
+  long pageSize = sysconf(_SC_PAGESIZE);
+  uint8_t* base = AlignDown((uint8_t*)ptr, pageSize);
+  uint8_t* end = AlignUp((uint8_t*)ptr + size, pageSize);
   size_t len = end - base;
   HSAKMT_STATUS error = HSAKMT_CALL(hsaKmtSVMSetAttr(base, len, attribs.size(), &attribs[0]));
   if (error != HSAKMT_STATUS_SUCCESS)

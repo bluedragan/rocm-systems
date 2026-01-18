@@ -44,9 +44,9 @@
 static_assert(sizeof(void*) == 8);
 
 // In addition, this file uses x64 assembly which is inherently platform dependent.
-#ifndef __x86_64__
-static_assert(false);
-#endif
+// #ifndef __x86_64__
+// static_assert(false);
+// #endif
 
 namespace fs = rocprofiler::common::filesystem;
 

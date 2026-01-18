@@ -26,7 +26,11 @@ THE SOFTWARE.
 #include <hip/hip_common.h>
 
 #if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
+#if defined(__powerpc64__) || defined(__PPC64__)
+#include <hip/amd_detail/amd_ppc64le_hip_bf16.h>
+#else
 #include <hip/amd_detail/amd_hip_bf16.h>
+#endif
 #elif !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
 #include <hip/nvidia_detail/nvidia_hip_bf16.h>
 #else

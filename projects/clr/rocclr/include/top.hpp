@@ -54,6 +54,11 @@
 #include <xmmintrin.h>
 #endif /*ATI_ARCH_X86*/
 
+#if defined(__powerpc64__)
+#define NO_WARN_X86_INTRINSICS 1
+#include <immintrin.h>
+#endif
+
 #include <atomic>
 #include <cstdint>
 #include <cstddef>

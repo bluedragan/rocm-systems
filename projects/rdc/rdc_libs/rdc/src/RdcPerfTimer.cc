@@ -22,7 +22,12 @@ THE SOFTWARE.
 
 #include "rdc_lib/RdcPerfTimer.h"
 
+// #include <x86intrin.h>
+#if defined(__x86_64__) || defined(_M_X64)
 #include <x86intrin.h>
+#elif defined(__powerpc64__) || defined(__PPC64__)
+#include <sys/platform/ppc.h>
+#endif
 
 namespace amd {
 namespace rdc {
@@ -140,6 +145,7 @@ uint64_t RdcPerfTimer::CoarseTimestampUs() {
   return uint64_t(ts.tv_sec) * 1000000 + ts.tv_nsec / 1000;
 }
 
+/*
 uint64_t RdcPerfTimer::MeasureTSCFreqHz() {
   // Make a coarse interval measurement of TSC ticks for 1 gigacycles.
   unsigned int unused;
@@ -159,6 +165,36 @@ uint64_t RdcPerfTimer::MeasureTSCFreqHz() {
   uint64_t tscIntervalTicks = tscTicksEnd - tscTicksBegin;
   return (tscIntervalTicks * 10 + (coarseIntervalNs / 2)) / coarseIntervalNs;
 }
+*/
 
+uint64_t RdcPerfTimer::MeasureTSCFreqHz() {
+  unsigned int unused;
+  uint64_t tscTicksBegin, tscTicksEnd;
+  uint64_t coarseBeginUs = CoarseTimestampUs();
+
+//  --- Architecture Specific Read ---
+#if defined(__x86_64__) || defined(_M_X64)
+  tscTicksBegin = __rdtscp(&unused);
+#elif defined(__powerpc64__) || defined(__PPC64__)
+// __ppc_get_timebase() is the standard way to read TB on POWER
+  tscTicksBegin = __ppc_get_timebase();
+#else
+  #error "Unsupported architecture"
+#endif
+  do {
+#if defined(__x86_64__) || defined(_M_X64)
+    tscTicksEnd = __rdtscp(&unused);
+#elif defined(__powerpc64__) || defined(__PPC64__)
+    tscTicksEnd = __ppc_get_timebase();
+#endif
+  } while (tscTicksEnd - tscTicksBegin < 1000000000);
+  uint64_t coarseEndUs = CoarseTimestampUs();
+
+  // Compute the frequency
+  uint64_t coarseIntervalNs = (coarseEndUs - coarseBeginUs) * 1000;
+  uint64_t tscIntervalTicks = tscTicksEnd - tscTicksBegin;
+  // Frequency in Hz, rounded
+  return (tscIntervalTicks * 1000000000 + (coarseIntervalNs / 2)) / coarseIntervalNs;
+}
 }  // namespace rdc
 }  // namespace amd

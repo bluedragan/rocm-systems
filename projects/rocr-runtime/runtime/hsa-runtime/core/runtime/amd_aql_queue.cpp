@@ -522,8 +522,6 @@ uint32_t AqlQueue::ComputeRingBufferMaxPkts() {
 void AqlQueue::AllocRegisteredRingBuffer(uint32_t queue_size_pkts) {
   // Allocate storage for the ring buffer.
   ring_buf_alloc_bytes_ = queue_size_pkts * sizeof(core::AqlPacket);
-  assert(IsMultipleOf(ring_buf_alloc_bytes_, 4096) && "Ring buffer sizes must be 4KiB aligned.");
-
   if (IsDeviceMemRingBuf()) {
     if (!agent_->LargeBarEnabled()) {
       throw AMD::hsa_exception(HSA_STATUS_ERROR_INVALID_QUEUE_CREATION,

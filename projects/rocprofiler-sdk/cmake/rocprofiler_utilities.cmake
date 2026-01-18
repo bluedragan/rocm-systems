@@ -224,7 +224,6 @@ function(ROCPROFILER_CHECKOUT_GIT_SUBMODULE)
                     ${CHECKOUT_ADDITIONAL_CMDS} ${CHECKOUT_RELATIVE_PATH}
             WORKING_DIRECTORY ${CHECKOUT_WORKING_DIRECTORY}
             RESULT_VARIABLE RET)
-
         # check the return code
         if(RET GREATER 0)
             set(_CMD "${GIT_EXECUTABLE} submodule update --init ${_RECURSE}

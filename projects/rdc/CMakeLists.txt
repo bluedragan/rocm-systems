@@ -22,6 +22,7 @@
 # Minimum version of cmake required
 #
 cmake_minimum_required(VERSION 3.15)
+message("Platform1: ${CMAKE_SYSTEM_PROCESSOR}")
 
 set( COMP_TYPE "runtime" )
 set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
@@ -55,8 +56,6 @@ set_property(
     PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel"
 )
 
-# Set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -m64 -msse -msse2")
 set(CMAKE_CXX_FLAGS_DEBUG
     "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -DDEBUG"
     CACHE STRING
@@ -150,6 +149,12 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 
 # this must go after some CMAKE_* variables
 project(${RDC} VERSION "${VERSION_STRING}" HOMEPAGE_URL "https://github.com/RadeonOpenCompute/rdc")
+# Set compile flags
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -m64")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -m64 -msse -msse2")
+endif()
 
 # Include CMAKE_INSTALL_* variables
 # this must go after project()

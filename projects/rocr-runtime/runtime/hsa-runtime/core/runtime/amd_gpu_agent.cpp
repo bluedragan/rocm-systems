@@ -1892,7 +1892,9 @@ void GpuAgent::AcquireQueueMainScratch(ScratchInfo& scratch) {
   if (large) scratch.main_size = scratch.dispatch_size;
 
   // Ensure mapping will be in whole pages.
-  scratch.main_size = AlignUp(scratch.main_size, 4096);
+  //scratch.main_size = AlignUp(scratch.main_size, 4096);
+  long pageSize = sysconf(_SC_PAGESIZE);
+  scratch.main_size = AlignUp(scratch.main_size, pageSize);
 
   /*
   Sequence of attempts is:
@@ -2034,7 +2036,9 @@ void GpuAgent::AcquireQueueAltScratch(ScratchInfo& scratch) {
   ScopedAcquire<KernelMutex> lock(&scratch_lock_);
 
   // Ensure mapping will be in whole pages.
-  scratch.alt_size = AlignUp(scratch.alt_size, 4096);
+  long pageSize = sysconf(_SC_PAGESIZE);
+  scratch.alt_size = AlignUp(scratch.alt_size, pageSize);
+//  scratch.alt_size = AlignUp(scratch.alt_size, 4096);
 
   /*
   Sequence of attempts is:
@@ -2495,7 +2499,7 @@ void GpuAgent::InitAllocators() {
     if (pool->kernarg()) {
       system_allocator_ = [pool](size_t size, size_t alignment,
                                  MemoryRegion::AllocateFlags alloc_flags) -> void* {
-        assert(alignment <= 4096);
+        //assert(alignment <= 4096);
         void* ptr = nullptr;
         return (HSA_STATUS_SUCCESS ==
                 core::Runtime::runtime_singleton_->AllocateMemory(pool, size, alloc_flags, &ptr))

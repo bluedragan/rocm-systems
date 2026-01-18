@@ -44,7 +44,7 @@
 #include <atomic>
 #include <cinttypes>
 
-#if defined(__AVX__)
+#if defined(__AVX__) 
 #if defined(__MINGW64__)
 #include <intrin.h>
 #else

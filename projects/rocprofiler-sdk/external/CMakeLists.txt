@@ -196,12 +196,23 @@ target_link_libraries(
     INTERFACE $<BUILD_INTERFACE:rocprofiler-sdk-perfetto-static-library>)
 
 # ELFIO
-rocprofiler_checkout_git_submodule(
-    RECURSIVE
-    RELATIVE_PATH external/elfio
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    REPO_URL https://github.com/serge1/ELFIO.git
-    REPO_BRANCH "Release_3.12")
+message("CMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+    rocprofiler_checkout_git_submodule(
+        RECURSIVE
+        RELATIVE_PATH external/elfio
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        REPO_URL https://github.com/serge1/ELFIO.git
+        REPO_BRANCH "7d30a22fc5aac06adfe7887ae57f3701b6b5f913")
+else()
+   rocprofiler_checkout_git_submodule(
+       RECURSIVE
+       RELATIVE_PATH external/elfio
+       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+       REPO_URL https://github.com/serge1/ELFIO.git
+       REPO_BRANCH "Release_3.12")
+endif()
+
 
 set(ELFIO_BUILD_EXAMPLES OFF)
 set(ELFIO_BUILD_TESTS OFF)

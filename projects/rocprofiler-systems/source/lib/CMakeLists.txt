@@ -73,5 +73,5 @@ add_subdirectory(binary)
 
 add_subdirectory(rocprof-sys)
 add_subdirectory(rocprof-sys-dl)
-add_subdirectory(rocprof-sys-rt)
+# add_subdirectory(rocprof-sys-rt)
 add_subdirectory(rocprof-sys-user)
