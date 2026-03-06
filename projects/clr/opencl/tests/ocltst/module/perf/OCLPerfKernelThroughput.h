@@ -21,6 +21,11 @@
 #include "xmmintrin.h"
 #endif
 
+#if defined(__powerpc64__)
+#define NO_WARN_X86_INTRINSICS 1
+#include <immintrin.h>
+#endif
+
 #include "OCLTestImp.h"
 // #include <sstream>
 // #define WIN32_LEAN_AND_MEAN //Restricts windows.h to include only the core

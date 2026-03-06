@@ -15,8 +15,10 @@ add_subdirectory(rocprofiler-sdk-roctx)
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "rocpd")
 add_subdirectory(rocprofiler-sdk-rocpd)
 
-set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "rocattach")
-add_subdirectory(rocprofiler-sdk-rocattach)
+if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+  set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "rocattach")
+  add_subdirectory(rocprofiler-sdk-rocattach)
+endif()
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
 add_subdirectory(att-tool)

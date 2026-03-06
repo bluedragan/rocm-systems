@@ -601,6 +601,7 @@ endif()
 set(HAVE_HWLOC FALSE)
 set(HWLOC_TARGET "")
 
+
 # First priority: Try to find hwloc via CMake package (from TheRock sysdeps)
 find_package(hwloc QUIET CONFIG)
 if(hwloc_FOUND AND TARGET hwloc::hwloc)

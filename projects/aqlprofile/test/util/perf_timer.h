@@ -42,6 +42,10 @@
 #endif  // __GNUC__
 #endif  // _MSC_VER
 
+#if defined(__powerpc64__) || defined(__PPC64__)
+#include <sys/platform/ppc.h>
+#endif
+
 #include <iostream>
 #include <string>
 #include <vector>

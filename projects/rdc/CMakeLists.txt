@@ -59,9 +59,8 @@ set_property(
     PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel"
 )
 
-# Set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -m64 -msse -msse2")
 set(CMAKE_CXX_FLAGS_DEBUG
+endif()
     "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -DDEBUG"
     CACHE STRING
     "Flags for Debug builds"
@@ -154,6 +153,14 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 
 # this must go after some CMAKE_* variables
 project(${RDC} VERSION "${VERSION_STRING}" HOMEPAGE_URL "https://github.com/RadeonOpenCompute/rdc")
+
+
+# Set compile flags
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -m64")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -m64 -msse -msse2")
+endif()
 
 # Include CMAKE_INSTALL_* variables
 # this must go after project()

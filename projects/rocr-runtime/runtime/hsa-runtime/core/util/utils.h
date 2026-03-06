@@ -78,6 +78,9 @@ void log_printf(const char* file, int line, const char* format, ...);
 #if defined(__GNUC__)
 #if defined(__i386__) || defined(__x86_64__)
 #include <x86intrin.h>
+#elif defined(__powerpc__) || defined(__powerpc64__)            
+#define NO_WARN_X86_INTRINSICS 1
+#include <emmintrin.h>
 #endif
 
 #define __forceinline __inline__ __attribute__((always_inline))

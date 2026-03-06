@@ -333,8 +333,8 @@ static bool update_ctx_save_restore_size(HsaKFDContext *ctx, uint32_t nodeid, st
 
 		ctl_stack_size = wave_num * CNTL_STACK_BYTES_PER_WAVE(q->gfxv) + 8;
 		wg_data_size = cu_num * WG_CONTEXT_DATA_SIZE_PER_CU(q->gfxv, node);
-		q->ctl_stack_size = PAGE_ALIGN_UP(sizeof(HsaUserContextSaveAreaHeader)
-					+ ctl_stack_size);
+		q->ctl_stack_size = ALIGN_UP(sizeof(HsaUserContextSaveAreaHeader)
+					+ ctl_stack_size, 4096);
 		if ((q->gfxv & 0x3f0000) == 0xA0000) {
 			/* HW design limits control stack size to 0x7000.
 			 * This is insufficient for theoretical PM4 cases
@@ -350,7 +350,7 @@ static bool update_ctx_save_restore_size(HsaKFDContext *ctx, uint32_t nodeid, st
 		 * the CtlStackSize and CwsrSize from KFD, use that as the definitive value
 		 */
 		q->ctx_save_restore_size = node.CwsrSize > 0 ? node.CwsrSize :
-					   q->ctl_stack_size + PAGE_ALIGN_UP(wg_data_size);
+                                                   ALIGN_UP(q->ctl_stack_size + ALIGN_UP(wg_data_size, 4096) ,PAGE_SIZE);
 		q->ctl_stack_size = node.CtlStackSize > 0 ? node.CtlStackSize : q->ctl_stack_size;
 
 		return true;
@@ -434,6 +434,23 @@ void hsakmt_free_exec_aligned_memory_gpu(HsaKFDContext *ctx, void *addr, uint32_
 		hsaKmtFreeMemoryCtx(ctx, addr, size);
 }
 
+static void *allocate_exec_aligned_memory_eop(HsaKFDContext *ctx,
+                                          uint32_t size,
+                                          bool use_ats,
+                                          uint32_t gpu_id,
+                                          uint32_t NodeId,
+                                          bool nonPaged,
+                                          bool DeviceLocal,
+                                          bool Uncached)
+{
+        if (!use_ats)
+                return hsakmt_allocate_exec_aligned_memory_gpu(ctx, size, 4096, gpu_id, NodeId,
+                                                        nonPaged, DeviceLocal,
+                                                        Uncached);
+
+        return allocate_exec_aligned_memory_cpu(size);
+}
+
 /*
  * Allocates memory aligned to sysconf(_SC_PAGESIZE)
  */
@@ -451,6 +468,7 @@ static void *allocate_exec_aligned_memory(HsaKFDContext *ctx,
 							size, PAGE_SIZE, gpu_id, NodeId,
 							nonPaged, DeviceLocal,
 							Uncached);
+
 	return allocate_exec_aligned_memory_cpu(size);
 }
 
@@ -551,8 +569,7 @@ static int handle_concrete_asic(HsaKFDContext *ctx,
 
 	if (q->eop_buffer_size > 0) {
 		pr_info("Allocating VRAM for EOP\n");
-		q->eop_buffer = allocate_exec_aligned_memory(ctx,
-				q->eop_buffer_size,
+		q->eop_buffer = allocate_exec_aligned_memory_eop(ctx, q->eop_buffer_size,
 				q->use_ats, gpu_id,
 				NodeId, true, true, /* Unused for VRAM */false);
 		if (!q->eop_buffer)
@@ -753,7 +770,6 @@ HSAKMT_STATUS HSAKMTAPI hsaKmtCreateQueueExtCtx(HsaKFDContext *ctx,
 		free_queue(ctx, q);
 		return err;
 	}
-
 	args.read_pointer_address = QueueResource->QueueRptrValue;
 	args.write_pointer_address = QueueResource->QueueWptrValue;
 	args.ring_base_address = (uintptr_t)QueueAddress;

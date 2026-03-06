@@ -121,7 +121,9 @@ add_subdirectory(source)
 include(rocprofiler_config_install)
 include(rocprofiler_config_install_roctx)
 include(rocprofiler_config_install_rocpd)
+if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
 include(rocprofiler_config_install_rocattach)
+endif()
 include(rocprofiler_config_install_tests)
 
 # ROCPROFILER_BUILD_INTEGRATION_TESTS is not a standard option. If not defined, set it as

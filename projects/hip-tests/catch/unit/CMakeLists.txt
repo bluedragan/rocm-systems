@@ -51,9 +51,11 @@ add_subdirectory(virtualMemoryManagement)
 # TODO Rock build failures
 if(UNIX)
   add_subdirectory(atomics)
-  add_subdirectory(math)
-  # TODO compute build failures
-  add_subdirectory(deviceLib)
+  if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+      add_subdirectory(math)
+      # TODO compute build failures
+      add_subdirectory(deviceLib)
+  endif()
   add_subdirectory(syncthreads)
 endif()
 if(HIP_PLATFORM STREQUAL "amd")

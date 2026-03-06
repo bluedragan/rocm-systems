@@ -75,7 +75,9 @@
 #include "msccl/msccl_status.h"
 #include "latency_profiler/CollTrace.h"
 #include "latency_profiler/CollTraceFunc.h"
-#include  <cpuid.h>
+#if !defined(__powerpc64__)
+#include <cpuid.h>
+#endif
 
 #ifndef STR2
   #define STR2(v) #v
@@ -268,8 +270,12 @@ static ncclResult_t ncclInit() {
     INFO(NCCL_INIT, "Kernel version: %s", verStr);
     if (strstr(verStr, "cray") == NULL) {
       unsigned int eax, ebx, ecx, edx;
+#if !defined(__powerpc64__) && !defined(__PPC64__)
       if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx))
         ecx = 0; // cpuid not supported
+#else
+      	ecx=0;
+#endif
       NCCLCHECK(ncclTopoGetStrFromSys("/sys/devices/virtual/dmi/id", "bios_version", strValue));
       // Check BIOS string and hypervisor presence on ecx bit 31
       if (strncmp("Hyper-V UEFI Release", strValue, 20) != 0 && (ecx & (1u << 31)) == 0) {

@@ -10,6 +10,10 @@ project ( ${AQLPROFILE_NAME} )
 set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
 set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+  add_compile_options("-DNO_WARN_X86_INTRINSICS")
+endif()
+
 include(GNUInstallDirs)
 ## Adding default path cmake modules
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules" )

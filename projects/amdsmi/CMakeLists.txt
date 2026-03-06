@@ -40,6 +40,7 @@ generic_add_rocm()
 
 # provide git to utilities
 find_program(GIT NAMES git)
+find_package(Git REQUIRED)
 
 # Set Lintian Support Flags
 set(BUILD_ENABLE_LINTIAN_OVERRIDES
@@ -55,6 +56,9 @@ set(BUILD_DEBIAN_PKGING_FLAG
 
 ## Setup the package version based on git tags.
 set(PKG_VERSION_GIT_TAG_PREFIX "amdsmi_pkg_ver")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+    set(PKG_VERSION_GIT_TAG_PREFIX "hip-version_")
+endif()
 get_version_from_file("include/amd_smi/amdsmi.h" "MAJOR")
 get_version_from_file("include/amd_smi/amdsmi.h" "MINOR")
 get_version_from_file("include/amd_smi/amdsmi.h" "RELEASE")
@@ -247,6 +251,17 @@ if(ENABLE_ESMI_LIB)
         else()
             message(STATUS "esmi_ib_library is the latest version: ${current_esmi_tag}...")
         endif()
+    endif()
+
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64le")
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_SOURCE_DIR}/../../../patches/esmi/esmi_ib_library_e_smi.c.patch
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/esmi_ib_library/src
+            RESULT_VARIABLE PATCH_RESULT
+            OUTPUT_VARIABLE PATCH_OUTPUT
+            ERROR_VARIABLE PATCH_ERROR
+            COMMAND_ERROR_IS_FATAL ANY
+        )
     endif()
 
     # Make sure to update the amd_hsmp.h file with the corresponding esmi version

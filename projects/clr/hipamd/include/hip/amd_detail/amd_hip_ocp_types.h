@@ -18,7 +18,10 @@ static_assert(sizeof(unsigned short) == 2, "");
 
 #if (defined(__clang__) && (__clang_major__ > 17) && defined(__HIP__)) ||                          \
     (defined(__GNUC__) && (__GNUC__ > 13))
+
+#if !defined(__powerpc64__) && !defined(__PPC64__)
 static_assert(sizeof(__bf16) == 2, "");
+#endif
 static_assert(sizeof(_Float16) == 2, "");
 #endif
 
@@ -30,16 +33,26 @@ typedef uint8_t __amd_fp8_storage_t;
 typedef uint16_t __amd_fp8x2_storage_t;
 typedef uint8_t __amd_fp4x2_storage_t;
 typedef uint32_t __amd_fp4x8_storage_t;
+#if defined(__powerpc64__) || defined(__PPC64__)
+typedef bf16 __amd_bf16_storage_t;
+#else
 typedef __bf16 __amd_bf16_storage_t;
+#endif
 typedef _Float16 __amd_fp16_storage_t;
 typedef int8_t __amd_scale_t;
 
 #if defined(__clang__) && (__clang_major__ > 17) && defined(__HIP__)
 typedef unsigned int __attribute__((ext_vector_type(2))) __amd_uintx2_storage_t;
 typedef uint8_t __attribute__((ext_vector_type(8))) __amd_fp8x8_storage_t;
+#if defined(__powerpc64__) || defined(__PPC64__)
+typedef bf16_2 __amd_bf16x2_storage_t;
+typedef bf16_8 __amd_bf16x8_storage_t;
+typedef bf16_32 __amd_bf16x32_storage_t;
+#else
 typedef __bf16 __attribute__((ext_vector_type(2))) __amd_bf16x2_storage_t;
 typedef __bf16 __attribute__((ext_vector_type(8))) __amd_bf16x8_storage_t;
 typedef __bf16 __attribute__((ext_vector_type(32))) __amd_bf16x32_storage_t;
+#endif
 typedef float __attribute__((ext_vector_type(2))) __amd_floatx2_storage_t;
 typedef float __attribute__((ext_vector_type(8))) __amd_floatx8_storage_t;
 typedef float __attribute__((ext_vector_type(16))) __amd_floatx16_storage_t;
@@ -53,9 +66,15 @@ typedef short __attribute__((ext_vector_type(2))) __amd_shortx2_storage_t;
 /* GCC expects vector size in bytes */
 typedef unsigned int __attribute__((vector_size(8))) __amd_uintx2_storage_t;
 typedef uint8_t __attribute__((vector_size(8))) __amd_fp8x8_storage_t;
+#if defined(__powerpc64__) || defined(__PPC64__)
+typedef bf16 __attribute__((vector_size(4))) __amd_bf16x2_storage_t;
+typedef bf16 __attribute__((vector_size(16))) __amd_bf16x8_storage_t;
+typedef bf16 __attribute__((vector_size(64))) __amd_bf16x32_storage_t;
+#else
 typedef __bf16 __attribute__((vector_size(4))) __amd_bf16x2_storage_t;
 typedef __bf16 __attribute__((vector_size(16))) __amd_bf16x8_storage_t;
 typedef __bf16 __attribute__((vector_size(64))) __amd_bf16x32_storage_t;
+#endif
 typedef float __attribute__((vector_size(8))) __amd_floatx2_storage_t;
 typedef float __attribute__((vector_size(32))) __amd_floatx8_storage_t;
 typedef float __attribute__((vector_size(64))) __amd_floatx16_storage_t;

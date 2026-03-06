@@ -157,21 +157,33 @@ uint64_t PerfTimer::CoarseTimestampUs() {
 #endif
 }
 
+
 uint64_t PerfTimer::MeasureTSCFreqHz() {
-  // Make a coarse interval measurement of TSC ticks for 1 gigacycles.
   unsigned int unused;
-  uint64_t tscTicksEnd;
-
+  uint64_t tscTicksBegin, tscTicksEnd;
   uint64_t coarseBeginUs = CoarseTimestampUs();
-  uint64_t tscTicksBegin = __rdtscp(&unused);
-  do {
-    tscTicksEnd = __rdtscp(&unused);
-  } while (tscTicksEnd - tscTicksBegin < 1000000000);
 
+//  --- Architecture Specific Read ---
+#if defined(__x86_64__) || defined(_M_X64)
+  tscTicksBegin = __rdtscp(&unused);
+#elif defined(__powerpc64__) || defined(__PPC64__)
+// __ppc_get_timebase() is the standard way to read TB on POWER
+  tscTicksBegin = __ppc_get_timebase();
+#else
+  #error "Unsupported architecture"
+#endif
+  do {
+#if defined(__x86_64__) || defined(_M_X64)
+    tscTicksEnd = __rdtscp(&unused);
+#elif defined(__powerpc64__) || defined(__PPC64__)
+    tscTicksEnd = __ppc_get_timebase();
+#endif
+  } while (tscTicksEnd - tscTicksBegin < 1000000000);
   uint64_t coarseEndUs = CoarseTimestampUs();
 
-  // Compute the TSC frequency and round to nearest 100MHz.
+  // Compute the frequency
   uint64_t coarseIntervalNs = (coarseEndUs - coarseBeginUs) * 1000;
   uint64_t tscIntervalTicks = tscTicksEnd - tscTicksBegin;
-  return (tscIntervalTicks * 10 + (coarseIntervalNs / 2)) / coarseIntervalNs;
+  // Frequency in Hz, rounded
+  return (tscIntervalTicks * 1000000000 + (coarseIntervalNs / 2)) / coarseIntervalNs;
 }
